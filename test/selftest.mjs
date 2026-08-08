@@ -2,11 +2,11 @@
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
-const stats = require('../app/js/stats.js');
-const dea = require('../app/js/dea.js');
-const survival = require('../app/js/survival.js');
-const cox = require('../app/js/cox.js');
-const cluster = require('../app/js/cluster.js');
+const stats = require('../js/stats.js');
+const dea = require('../js/dea.js');
+const survival = require('../js/survival.js');
+const cox = require('../js/cox.js');
+const cluster = require('../js/cluster.js');
 
 let fails = 0;
 function check(name, got, expected, tol) {

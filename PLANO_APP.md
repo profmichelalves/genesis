@@ -26,27 +26,26 @@ Navegador (PWA) ──HTTPS──▶ cbioportal.org/api (CORS *)
 ## 2. Estrutura de arquivos
 
 ```
-genesis/
+genesis/                      # raiz = raiz do site (index.html na raiz)
   PLANO_APP.md                 # este plano
-  app/
-    index.html                 # shell SPA (tabs)
-    manifest.webmanifest       # PWA instalável
-    sw.js                      # service worker (app shell + runtime cache)
-    icons/icon-192.png, icon-512.png, favicon.svg
-    css/styles.css             # mobile-first, variáveis CSS, dark/light
-    js/
-      stats.js                 # helpers numéricos + distribuições (t, χ², normal) + FDR
-      dea.js                   # t moderado estilo-limma + Benjamini–Hochberg
-      survival.js              # Kaplan–Meier + log-rank + tabela de risco
-      cox.js                   # Cox PH (Newton–Raphson, empates Efron, IC 95%)
-      cluster.js               # agrupamento hierárquico (heatmap)
-      api.js                   # cliente cBioPortal (fetch + retry + paging)
-      storage.js               # camada IndexedDB (Float32Array compacto)
-      datapack.js              # pipeline de download (progresso, escopo, cache)
-      charts.js                # renderização Plotly (todos os gráficos)
-      export.js                # PNG/SVG/CSV e relatório
-      ui.js                    # tabs, formulários, toasts, tabelas
-      main.js                  # bootstrap e orquestração
+  index.html                   # shell SPA (tabs)
+  manifest.webmanifest         # PWA instalável
+  sw.js                        # service worker (app shell + runtime cache)
+  icons/icon-192.png, icon-512.png, favicon.svg
+  css/styles.css               # mobile-first, variáveis CSS, dark/light
+  js/
+    stats.js                   # helpers numéricos + distribuições (t, χ², normal) + FDR
+    dea.js                     # t moderado estilo-limma + Benjamini–Hochberg
+    survival.js                # Kaplan–Meier + log-rank + tabela de risco
+    cox.js                     # Cox PH (Newton–Raphson, empates Efron, IC 95%)
+    cluster.js                 # agrupamento hierárquico (heatmap)
+    api.js                     # cliente cBioPortal (fetch + retry + paging)
+    storage.js                 # camada IndexedDB (Float32Array compacto)
+    datapack.js                # pipeline de download (progresso, escopo, cache)
+    charts.js                  # renderização Plotly (todos os gráficos)
+    export.js                  # PNG/SVG/CSV e relatório
+    ui.js                      # tabs, formulários, toasts, tabelas
+    main.js                    # bootstrap e orquestração
   test/
     selftest.mjs               # testes do motor estatístico (Node)
     compare_with_r.md          # como validar contra as saídas do Script.R
