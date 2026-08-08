@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>TARGET ALL Explorer</title>
+  <meta name="description" content="PWA de análise do estudo TARGET ALL (Leucemia Linfoide Aguda) via cBioPortal: Top 30 mutados, expressão diferencial, Kaplan-Meier e Cox." />
+  <meta name="theme-color" content="#0c295c" />
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="progress-bar" role="progressbar" aria-label="Progresso"></div>
+
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <img src="icons/icon-192.png" alt="Logo" />
+        <h1>TARGET ALL Explorer<small>LLA pediátrica — TARGET ALL (cBioPortal)</small></h1>
+      </div>
+      <div class="header-spacer"></div>
+      <button id="install-btn" class="icon-btn" hidden>
+        <svg viewBox="0 0 24 24"><path d="M12 16l-6-6 1.4-1.4L11 12.2V2h2v10.2l3.6-3.6L18 10zM5 20h14v-6h2v8H3v-8h2z"/></svg>
+        Instalar
+      </button>
+      <button id="theme-btn" class="icon-btn" aria-label="Alternar tema" title="Alternar tema claro/escuro">
+        <svg id="theme-icon" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.4 5.4 0 0 1-6.74 3.63 5.4 5.4 0 0 1-3.7-6.86A9 9 0 0 0 12 3z"/></svg>
+      </button>
+    </div>
+    <nav role="tablist" aria-label="Seções">
+      <button class="tab" role="tab" aria-selected="true" data-panel="dashboard">Dashboard</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="clinical">Dados clínicos</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="top30">Top 30 mutados</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="dea">Expressão diferencial</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="km">Kaplan-Meier</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="cox">Cox</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="gene">Gene</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="settings">Configurações</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ======================= DASHBOARD ======================= -->
+    <section id="panel-dashboard" class="panel active" aria-label="Dashboard">
+      <h2>Dashboard</h2>
+      <p class="sub">Estudo <span class="mono" id="dash-study">—</span> · TARGET ALL — dados públicos via cBioPortal.</p>
+      <div class="grid stats" id="dash-stats"></div>
+      <div class="card">
+        <h3>Download do estudo</h3>
+        <div id="dash-datapack"></div>
+      </div>
+      <div class="grid cards">
+        <div class="card">
+          <h3>Distribuição de FIRST_EVENT</h3>
+          <div id="dash-first-event" class="plot sm"></div>
+        </div>
+        <div class="card">
+          <h3>Próximos passos</h3>
+          <p class="muted">Navegue pelas abas para reproduzir as análises do Script.R.</p>
+          <div class="row">
+            <button class="btn primary" data-goto="top30">Top 30 mutados</button>
+            <button class="btn primary" data-goto="dea">Expressão diferencial</button>
+            <button class="btn primary" data-goto="km">Kaplan-Meier</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= CLÍNICO ======================= -->
+    <section id="panel-clinical" class="panel" aria-label="Dados clínicos">
+      <h2>Dados clínicos</h2>
+      <p class="sub" id="clinical-sub"></p>
+      <div class="card">
+        <div class="row">
+          <div class="field"><label for="clin-filter">Filtrar (texto)</label><input type="text" id="clin-filter" placeholder="ex.: Relapse" /></div>
+          <div class="field auto"><label>&nbsp;</label><button class="btn" id="clin-csv">Exportar CSV</button></div>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="clinical-table"></table>
+        </div>
+        <p class="muted" id="clinical-count"></p>
+      </div>
+    </section>
+
+    <!-- ======================= TOP 30 ======================= -->
+    <section id="panel-top30" class="panel" aria-label="Top 30 mutados">
+      <h2>Top 30 genes mais mutados</h2>
+      <p class="sub" id="top30-sub"></p>
+      <div class="card">
+        <div class="row" style="margin-bottom:8px">
+          <div class="field auto"><label>&nbsp;</label><button class="btn primary" id="top30-run">Gerar / Atualizar</button></div>
+          <div class="field auto"><label>&nbsp;</label><button class="btn" id="top30-csv">Exportar CSV</button></div>
+        </div>
+        <div id="top30-chart" class="plot tall"></div>
+      </div>
+      <div class="card">
+        <h3>Tabela</h3>
+        <div class="table-wrap"><table class="data" id="top30-table"></table></div>
+      </div>
+    </section>
+
+    <!-- ======================= DEA ======================= -->
+    <section id="panel-dea" class="panel" aria-label="Expressão diferencial">
+      <h2>Expressão diferencial — Relapse vs None</h2>
+      <p class="sub" id="dea-sub"></p>
+      <div class="card">
+        <div class="row">
+          <div class="field"><label for="dea-padj">adj. p-valor (FDR)</label><input type="number" id="dea-padj" value="0.05" min="0.0001" step="0.01" /></div>
+          <div class="field"><label for="dea-logfc">|log2FC|</label><input type="number" id="dea-logfc" value="0.5" min="0" step="0.1" /></div>
+          <div class="field"><label for="dea-log2">Transformar log2</label>
+            <select id="dea-log2"><option value="0">Não (RPKM bruto, como no Script.R)</option><option value="1" selected>Sim (log2 RPKM+1)</option></select>
+          </div>
+          <div class="field auto"><label>&nbsp;</label><button class="btn primary" id="dea-run">Rodar DEA</button></div>
+          <div class="field auto"><label>&nbsp;</label><button class="btn" id="dea-csv">Exportar CSV</button></div>
+        </div>
+        <p class="muted" id="dea-summary"></p>
+      </div>
+      <div class="grid cards">
+        <div class="card"><h3>Volcano plot</h3><div id="dea-volcano" class="plot"></div></div>
+        <div class="card"><h3>MA plot</h3><div id="dea-ma" class="plot"></div></div>
+      </div>
+      <div class="card"><h3>Heatmap — Top DEGs</h3><div id="dea-heatmap" class="plot tall"></div></div>
+      <div class="card"><h3>Tabela de resultados</h3><div class="table-wrap"><table class="data" id="dea-table"></table></div></div>
+    </section>
+
+    <!-- ======================= KM ======================= -->
+    <section id="panel-km" class="panel" aria-label="Kaplan-Meier">
+      <h2>Curvas de Kaplan-Meier</h2>
+      <p class="sub" id="km-sub"></p>
+      <div class="card">
+        <div class="row">
+          <div class="field" style="flex:1 1 320px"><label for="km-genes">Genes (separados por vírgula; vazio = top 10)</label><input type="text" id="km-genes" placeholder="ex.: TP53, ETV6, RUNX1" /></div>
+          <div class="field auto"><label>&nbsp;</label><button class="btn primary" id="km-run">Gerar curvas</button></div>
+        </div>
+        <p class="muted" id="km-summary"></p>
+      </div>
+      <div id="km-panel" class="grid cards"></div>
+    </section>
+
+    <!-- ======================= COX ======================= -->
+    <section id="panel-cox" class="panel" aria-label="Cox">
+      <h2>Regressão de Cox — tempo de sobrevida</h2>
+      <p class="sub" id="cox-sub"></p>
+      <div class="card">
+        <div class="row">
+          <div class="field" style="flex:1 1 320px"><label for="cox-genes">Genes (vazio = top 10 DEGs/expressos)</label><input type="text" id="cox-genes" placeholder="ex.: TP53, ETV6, RUNX1" /></div>
+          <div class="field auto"><label>&nbsp;</label><button class="btn primary" id="cox-run">Rodar Cox</button></div>
+          <div class="field auto"><label>&nbsp;</label><button class="btn" id="cox-csv">Exportar CSV</button></div>
+        </div>
+        <p class="muted" id="cox-summary"></p>
+      </div>
+      <div class="card"><h3>Forest plot — Cox univariado</h3><div id="cox-forest" class="plot"></div></div>
+      <div class="card"><h3>Cox multivariado (genes p &lt; 0.1)</h3><div class="table-wrap"><table class="data" id="cox-multi-table"></table></div></div>
+      <div class="card"><h3>Cox univariado</h3><div class="table-wrap"><table class="data" id="cox-table"></table></div></div>
+    </section>
+
+    <!-- ======================= GENE ======================= -->
+    <section id="panel-gene" class="panel" aria-label="Gene">
+      <h2>Gene Explorer</h2>
+      <p class="sub" id="gene-sub"></p>
+      <div class="card">
+        <div class="row">
+          <div class="field" style="flex:1 1 300px"><label for="gene-input">Gene (símbolo Hugo)</label><input type="text" id="gene-input" list="gene-list" placeholder="ex.: TP53" /></div>
+          <datalist id="gene-list"></datalist>
+          <div class="field auto"><label>&nbsp;</label><button class="btn primary" id="gene-run">Analisar gene</button></div>
+        </div>
+      </div>
+      <div id="gene-result"></div>
+    </section>
+
+    <!-- ======================= SETTINGS ======================= -->
+    <section id="panel-settings" class="panel" aria-label="Configurações">
+      <h2>Configurações</h2>
+      <div class="card">
+        <h3>Dados (datapack)</h3>
+        <div id="settings-datapack"></div>
+      </div>
+      <div class="card">
+        <h3>Sobrevida</h3>
+        <div class="row">
+          <div class="field"><label for="set-time">Coluna de tempo</label><select id="set-time"></select></div>
+          <div class="field"><label for="set-event">Coluna de evento</label><select id="set-event"></select></div>
+          <div class="field"><label for="set-group">Coluna de grupo (DEA)</label><select id="set-group"></select></div>
+        </div>
+        <p class="muted">A detecção automática usa heurísticas (OS/EFS/DFS...). Ajuste aqui se necessário e clique em "Aplicar".</p>
+        <button class="btn primary" id="set-apply">Aplicar</button>
+      </div>
+      <div class="card">
+        <h3>Relatório consolidado</h3>
+        <p class="muted">Gera um arquivo Markdown com os principais resultados das análises já rodadas.</p>
+        <button class="btn primary" id="btn-report">Gerar relatório (.md)</button>
+      </div>
+      <div class="card">
+        <h3>Histórico de análises</h3>
+        <div id="settings-history"></div>
+        <button class="btn danger" id="set-clear-history">Limpar histórico</button>
+      </div>
+      <div class="card">
+        <h3>Sobre e atribuição</h3>
+        <p class="muted">
+          Dados do estudo <span class="mono">all_phase2_target_2018_pub</span> (TARGET, NCI) distribuídos via
+          <a href="https://www.cbioportal.org/study/summary?id=all_phase2_target_2018_pub" target="_blank" rel="noopener">cBioPortal</a>.
+          Dados TARGET destinam-se exclusivamente à pesquisa biomédica com dados pediátricos; siga as
+          <a href="https://ocg.cancer.gov/programs/target/target-publication-guidelines" target="_blank" rel="noopener">diretrizes de publicação do TARGET</a>.
+          As análises reproduzem, em JavaScript, os blocos do <span class="mono">referencias/Script.R</span>.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer>Ferramenta educacional e de pesquisa. Não constitui aconselhamento médico. Painel expresso: MSK-IMPACT (cBioPortal datahub).</footer>
+
+  <div id="toast" role="status"></div>
+  <div id="modal-root"></div>
+
+  <!-- Plotly via CDN (cacheado pelo service worker para uso offline) -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/panel.js"></script>
+  <script src="js/dea.js"></script>
+  <script src="js/survival.js"></script>
+  <script src="js/cox.js"></script>
+  <script src="js/cluster.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/datapack.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

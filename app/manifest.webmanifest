@@ -1,0 +1,17 @@
+{
+  "name": "TARGET ALL Explorer",
+  "short_name": "TALL Explorer",
+  "description": "PWA de análise do estudo TARGET ALL (Leucemia Linfoide Aguda pediátrica) via cBioPortal: Top 30 mutados, expressão diferencial, Kaplan-Meier e Cox.",
+  "lang": "pt-BR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0c295c",
+  "theme_color": "#0c295c",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

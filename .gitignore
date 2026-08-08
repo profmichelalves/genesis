@@ -1,0 +1,21 @@
+# Node
+node_modules/
+npm-debug.log*
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+
+# Artefatos locais de testes/API (descartáveis)
+test_artifacts/
+*.tmp
+*.part
+
+# Saídas grandes geradas em execução (se houver)
+app/.cache/
