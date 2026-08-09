@@ -126,7 +126,6 @@
         await TALL.datapack.clear();
         S.dp = null;
         datapackControls('#dash-datapack');
-        datapackControls('#settings-datapack');
         renderDashboard();
         TALL.ui.toast('Dados apagados.', 'info');
       });
@@ -163,10 +162,9 @@
       });
       S.dp = await TALL.datapack.loadFromCache();
       datapackControls('#dash-datapack');
-      datapackControls('#settings-datapack');
       renderDashboard();
-      fillDatalists();
       TALL.ui.toast('Estudo pronto! Navegue pelas abas.', 'ok');
+      runAll();
     } catch (e) {
       console.error(e);
       TALL.ui.toast('Falha ao baixar: ' + e.message, 'error');
@@ -207,15 +205,21 @@
   ============================================================ */
   function runTop30() {
     if (!S.dp) return TALL.ui.toast('Baixe os dados primeiro.', 'error');
-    const rows = Object.values(S.dp.mut.byGene).map((g) => ({ Gene: g.symbol, N: g.count }));
+    const byGene = (S.dp.mut && S.dp.mut.byGene) || {};
+    const rows = Object.values(byGene).map((g) => ({ Gene: g.symbol, N: g.count }));
     rows.sort((a, b) => b.N - a.N);
+    if (!rows.length) {
+      $('#top30-sub').textContent = 'Nenhuma mutação encontrada.';
+      $('#top30-chart').innerHTML = '<p class="muted">Sem dados de mutação — reconstrua o estudo (Apagar dados → Baixar estudo).</p>';
+      TALL.ui.renderTable($('#top30-table'), ['Gene', 'N amostras', 'Frequência (%)'], []);
+      return;
+    }
     S.top30 = rows.slice(0, 30);
     $('#top30-sub').textContent = rows.length + ' genes mutados em ' + S.dp.mut.totalSamples + ' amostras sequenciadas';
     TALL.charts.top30('#top30-chart', rows);
     TALL.ui.renderTable($('#top30-table'),
       ['Gene', 'N amostras', 'Frequência (%)'],
       S.top30.map((r) => [r.Gene, r.N, (100 * r.N / S.dp.mut.totalSamples).toFixed(1)]));
-    addHistory({ type: 'top30', at: Date.now() });
   }
 
   /* ============================================================
@@ -223,7 +227,6 @@
   ============================================================ */
   function runDea() {
     if (!S.dp) return TALL.ui.toast('Baixe os dados primeiro.', 'error');
-    const log2 = $('#dea-log2').value === '1';
     const groups = deaGroups();
     const n1 = groups.filter((g) => g === 1).length;
     const n0 = groups.filter((g) => g === 0).length;
@@ -231,11 +234,11 @@
 
     const rows = S.dp.expr.map((g) => ({ gene: g.symbol, entrez: g.entrez, values: g.values }));
     TALL.ui.busy('Rodando DEA…');
-    const res = TALL.dea.run(rows, groups, { transform: log2 ? 'log2' : 'none' });
+    const res = TALL.dea.run(rows, groups, { transform: 'none' });
 
     // A (média) por gene para o MA plot
     for (const r of res.table) r.meanExpr = +r.AveExpr.toFixed(3);
-    res.transform = log2 ? 'log2' : 'none';
+    res.transform = 'none';
     S.deaResult = res;
 
     $('#dea-sub').textContent =
@@ -252,14 +255,13 @@
         r.gene, r.logFC.toFixed(3), r.meanExpr, r.t.toFixed(2),
         r['P.Value'].toExponential(2), r['adj.P.Val'].toExponential(2), r.signif
       ]));
-    addHistory({ type: 'dea', at: Date.now(), nDEG: res.nDEG });
   }
 
   function renderHeatmap(res) {
-    const padj = parseFloat($('#dea-padj').value) || 0.05;
-    const top = res.table.filter((r) => r['adj.P.Val'] < padj && r.signif !== 'NS').slice(0, 50);
+    // Script.R: top 40 DEGs (signif != NS), ordenados por adj.P
+    const top = res.table.filter((r) => r.signif !== 'NS').slice(0, 40);
     if (top.length < 2) {
-      $('#dea-heatmap').innerHTML = '<p class="muted">Menos de 2 genes DE — reduza o limiar de adj. p.</p>';
+      $('#dea-heatmap').innerHTML = '<p class="muted">Menos de 2 genes DE (limiares do Script.R: adj.P<0.05 e |log2FC|>0.5).</p>';
       return;
     }
     const n = S.dp.rnaSampleIds.length;
@@ -317,12 +319,19 @@
       summaries.push(gene + ': p=' + km.logRank.p.toExponential(2));
     }
     $('#km-sub').textContent = summaries.join(' · ') || 'Nenhum gene válido.';
-    addHistory({ type: 'km', at: Date.now(), genes: genes.length });
   }
 
   function defaultGenes() {
-    if (S.top30 && S.top30.length) return S.top30.slice(0, 10).map((r) => r.Gene);
-    return ['TP53', 'ETV6', 'RUNX1', 'NRAS', 'KRAS', 'PAX5', 'IKZF1', 'JAK2', 'NOTCH1', 'FLT3'];
+    // Script.R: km_candidates = top 10 DE (por adj.P) ∪ top 30 mutados ∩ expressos, máx 10
+    const out = [];
+    if (S.deaResult) {
+      out.push(...S.deaResult.table.filter((r) => r.signif !== 'NS').slice(0, 10).map((r) => r.gene));
+    }
+    if (S.top30 && S.top30.length) {
+      const inExpr = new Set(S.dp ? S.dp.expr.map((g) => g.symbol) : []);
+      out.push(...S.top30.map((r) => r.Gene).filter((g) => inExpr.has(g)));
+    }
+    return Array.from(new Set(out)).slice(0, 10);
   }
 
   /* tabela de risco (n em risco em tempos selecionados) */
@@ -373,85 +382,6 @@
             fit.hrLower[j].toFixed(3) + '–' + fit.hrUpper[j].toFixed(3), fit.p[j].toExponential(2)]));
       }
     }
-    addHistory({ type: 'cox', at: Date.now(), genes: S.coxUni.length });
-  }
-
-  /* ============================================================
-     Gene Explorer
-  ============================================================ */
-  function runGene() {
-    if (!S.dp) return TALL.ui.toast('Baixe os dados primeiro.', 'error');
-    const sym = $('#gene-input').value.trim().toUpperCase();
-    if (!sym) return;
-    const er = exprRow(sym);
-    const mut = S.dp.mut.byGene[sym];
-    let km = null;
-    const out = [];
-    if (er) {
-      const vals = Array.from(er.values).filter((v) => isFinite(v));
-      const { time, event } = survivalArrays();
-      km = TALL.survival.analyze(time, event, Array.from(er.values));
-      const logVals = vals.map((v) => Math.log2(v + 1));
-      out.push('<div class="grid cards">');
-      out.push('<div class="card"><h3>Expressão de ' + sym + '</h3>' +
-        '<p class="muted">Mediana=' + TALL.stats.median(vals).toFixed(2) + ' · Média=' + TALL.stats.mean(vals).toFixed(2) +
-        ' · DP=' + TALL.stats.sd(vals).toFixed(2) + '<br>log2 mediana=' + TALL.stats.median(logVals).toFixed(2) +
-        ' · N=' + vals.length + '</p>' +
-        '<div id="gene-expr" class="plot sm"></div></div>');
-      out.push('<div class="card"><h3>Sobrevida (mediana)</h3><p class="muted">Log-rank p=' + km.logRank.p.toExponential(2) +
-        ' · Alto=' + km.nAlto + ' · Baixo=' + km.nBaixo + '</p><div id="gene-km" class="plot sm"></div></div>');
-      out.push('</div>');
-    } else {
-      out.push('<p class="muted">Gene não está no escopo de expressão carregado.</p>');
-    }
-    if (mut) {
-      out.push('<div class="card"><h3>Mutações de ' + sym + '</h3>' +
-        '<p class="muted">' + mut.count + ' amostras mutadas</p>' +
-        '<div class="table-wrap"><table class="data" id="gene-mut-table"></table></div></div>');
-    } else {
-      out.push('<div class="card"><h3>Mutações</h3><p class="muted">Sem mutações neste gene.</p></div>');
-    }
-    $('#gene-result').innerHTML = out.join('');
-
-    if (er) {
-      Plotly.react('gene-expr', [{
-        type: 'histogram', x: logVals, nbinsx: 30,
-        marker: { color: '#4c78a8' }
-      }], {
-        title: 'Expressão (log2 RPKM+1)', showlegend: false,
-        margin: { l: 40, r: 10, t: 30, b: 40 }, autosize: true,
-        paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)'
-      }, { displaylogo: false });
-      TALL.charts.km('gene-km', km, { title: '' });
-    }
-    if (mut) {
-      const rows = Object.entries(mut.proteinChanges).sort((a, b) => b[1] - a[1]).slice(0, 15);
-      TALL.ui.renderTable($('#gene-mut-table'), ['Alteração proteica', 'N'], rows.map((r) => [r[0], r[1]]));
-    }
-    addHistory({ type: 'gene', at: Date.now(), gene: sym });
-  }
-
-  /* ============================================================
-     Histórico / settings
-  ============================================================ */
-  function addHistory(entry) {
-    TALL.storage.get('history', 'entries').then((arr) => {
-      const list = (arr || []).concat([entry]).slice(-50);
-      TALL.storage.set('history', 'entries', list);
-      renderHistory(list);
-    });
-  }
-  function renderHistory(list) {
-    if (!list || !list.length) { $('#settings-history').innerHTML = '<p class="muted">Nenhuma análise ainda.</p>'; return; }
-    const names = { top30: 'Top 30 mutados', dea: 'Expressão diferencial', km: 'Kaplan-Meier', cox: 'Cox', gene: 'Gene' };
-    $('#settings-history').innerHTML = list.slice().reverse().map((h) =>
-      '<div class="history-item"><span>' + (names[h.type] || h.type) + '</span>' +
-      '<span class="meta">' + new Date(h.at).toLocaleString('pt-BR') + '</span></div>').join('');
-  }
-  function fillDatalists() {
-    const list = $('#gene-list');
-    if (!S.dp) return;
-    list.innerHTML = S.dp.expr.slice(0, 3000).map((g) => '<option value="' + g.symbol + '"></option>').join('');
   }
 
   /* ============================================================
@@ -474,24 +404,17 @@
       if (S.coxUni) TALL.export.csv('cox.csv', ['Gene', 'HR', 'HR_lower', 'HR_upper', 'p_value'],
         S.coxUni.map((r) => [r.Gene, r.HR, r.HR_lower, r.HR_upper, r.p_value]));
     });
-    $('#set-clear-history').addEventListener('click', async () => {
-      await TALL.storage.set('history', 'entries', []);
-      renderHistory([]);
-      TALL.ui.toast('Histórico limpo.', 'info');
-    });
-    $('#btn-report').addEventListener('click', () => TALL.export.report(S));
   }
 
-  function wireSettings() {
-    $('#set-time').addEventListener('change', () => S.settings.timeCol = $('#set-time').value);
-    $('#set-event').addEventListener('change', () => S.settings.eventCol = $('#set-event').value);
-    $('#set-group').addEventListener('change', () => S.settings.groupCol = $('#set-group').value);
-    $('#set-apply').addEventListener('click', () => {
-      S.settings.timeCol = $('#set-time').value;
-      S.settings.eventCol = $('#set-event').value;
-      S.settings.groupCol = $('#set-group').value;
-      TALL.ui.toast('Configurações de sobrevida aplicadas.', 'ok');
-    });
+  /* ============================================================
+     Executa as 4 análises do Script.R em sequência
+  ============================================================ */
+  function runAll() {
+    if (!S.dp) return;
+    try { runTop30(); } catch (e) { console.error('Top30:', e); }
+    try { runDea(); } catch (e) { console.error('DEA:', e); }
+    try { runKm(); } catch (e) { console.error('KM:', e); }
+    try { runCox(); } catch (e) { console.error('Cox:', e); }
   }
 
   /* ============================================================
@@ -517,42 +440,23 @@
     });
 
     datapackControls('#dash-datapack');
-    datapackControls('#settings-datapack');
 
     $('#top30-run').addEventListener('click', runTop30);
     $('#dea-run').addEventListener('click', runDea);
     $('#km-run').addEventListener('click', runKm);
     $('#cox-run').addEventListener('click', runCox);
-    $('#gene-run').addEventListener('click', runGene);
-    $('#gene-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') runGene(); });
 
     $('#clin-filter').addEventListener('input', (e) => updateClinicalTable(e.target.value));
     wireExports();
-    wireSettings();
-
-    // preenche selects de colunas de sobrevida após carregar dados
-    const tryFill = () => {
-      if (!S.dp) return;
-      const attrs = S.dp.clinical.attributes;
-      const set = (id, val) => { const el = $(id); if (el && !el.options.length) { el.innerHTML = attrs.map((a) => '<option value="' + a + '">' + a + '</option>').join(''); el.value = val; } };
-      set('#set-time', S.settings.timeCol);
-      set('#set-event', S.settings.eventCol);
-      set('#set-group', S.settings.groupCol);
-    };
-    const interval = setInterval(() => { if (S.dp) { tryFill(); clearInterval(interval); } }, 300);
-
-    TALL.storage.get('history', 'entries').then(renderHistory);
 
     // carrega cache
     S.dp = await TALL.datapack.loadFromCache();
     if (S.dp) {
       datapackControls('#dash-datapack');
-      datapackControls('#settings-datapack');
       renderDashboard();
       renderClinical();
-      fillDatalists();
-      tryFill();
-      TALL.ui.toast('Dados carregados do cache local.', 'ok');
+      runAll();
+      TALL.ui.toast('Dados carregados do cache local. Análises atualizadas.', 'ok');
     } else {
       renderDashboard();
     }

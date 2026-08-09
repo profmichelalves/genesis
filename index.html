@@ -36,8 +36,6 @@
       <button class="tab" role="tab" aria-selected="false" data-panel="dea">Expressão diferencial</button>
       <button class="tab" role="tab" aria-selected="false" data-panel="km">Kaplan-Meier</button>
       <button class="tab" role="tab" aria-selected="false" data-panel="cox">Cox</button>
-      <button class="tab" role="tab" aria-selected="false" data-panel="gene">Gene</button>
-      <button class="tab" role="tab" aria-selected="false" data-panel="settings">Configurações</button>
     </nav>
   </header>
 
@@ -55,15 +53,6 @@
         <div class="card">
           <h3>Distribuição de FIRST_EVENT</h3>
           <div id="dash-first-event" class="plot sm"></div>
-        </div>
-        <div class="card">
-          <h3>Próximos passos</h3>
-          <p class="muted">Navegue pelas abas para reproduzir as análises do Script.R.</p>
-          <div class="row">
-            <button class="btn primary" data-goto="top30">Top 30 mutados</button>
-            <button class="btn primary" data-goto="dea">Expressão diferencial</button>
-            <button class="btn primary" data-goto="km">Kaplan-Meier</button>
-          </div>
         </div>
       </div>
     </section>
@@ -107,11 +96,6 @@
       <p class="sub" id="dea-sub"></p>
       <div class="card">
         <div class="row">
-          <div class="field"><label for="dea-padj">adj. p-valor (FDR)</label><input type="number" id="dea-padj" value="0.05" min="0.0001" step="0.01" /></div>
-          <div class="field"><label for="dea-logfc">|log2FC|</label><input type="number" id="dea-logfc" value="0.5" min="0" step="0.1" /></div>
-          <div class="field"><label for="dea-log2">Transformar log2</label>
-            <select id="dea-log2"><option value="0">Não (RPKM bruto, como no Script.R)</option><option value="1" selected>Sim (log2 RPKM+1)</option></select>
-          </div>
           <div class="field auto"><label>&nbsp;</label><button class="btn primary" id="dea-run">Rodar DEA</button></div>
           <div class="field auto"><label>&nbsp;</label><button class="btn" id="dea-csv">Exportar CSV</button></div>
         </div>
@@ -154,59 +138,6 @@
       <div class="card"><h3>Forest plot — Cox univariado</h3><div id="cox-forest" class="plot"></div></div>
       <div class="card"><h3>Cox multivariado (genes p &lt; 0.1)</h3><div class="table-wrap"><table class="data" id="cox-multi-table"></table></div></div>
       <div class="card"><h3>Cox univariado</h3><div class="table-wrap"><table class="data" id="cox-table"></table></div></div>
-    </section>
-
-    <!-- ======================= GENE ======================= -->
-    <section id="panel-gene" class="panel" aria-label="Gene">
-      <h2>Gene Explorer</h2>
-      <p class="sub" id="gene-sub"></p>
-      <div class="card">
-        <div class="row">
-          <div class="field" style="flex:1 1 300px"><label for="gene-input">Gene (símbolo Hugo)</label><input type="text" id="gene-input" list="gene-list" placeholder="ex.: TP53" /></div>
-          <datalist id="gene-list"></datalist>
-          <div class="field auto"><label>&nbsp;</label><button class="btn primary" id="gene-run">Analisar gene</button></div>
-        </div>
-      </div>
-      <div id="gene-result"></div>
-    </section>
-
-    <!-- ======================= SETTINGS ======================= -->
-    <section id="panel-settings" class="panel" aria-label="Configurações">
-      <h2>Configurações</h2>
-      <div class="card">
-        <h3>Dados (datapack)</h3>
-        <div id="settings-datapack"></div>
-      </div>
-      <div class="card">
-        <h3>Sobrevida</h3>
-        <div class="row">
-          <div class="field"><label for="set-time">Coluna de tempo</label><select id="set-time"></select></div>
-          <div class="field"><label for="set-event">Coluna de evento</label><select id="set-event"></select></div>
-          <div class="field"><label for="set-group">Coluna de grupo (DEA)</label><select id="set-group"></select></div>
-        </div>
-        <p class="muted">A detecção automática usa heurísticas (OS/EFS/DFS...). Ajuste aqui se necessário e clique em "Aplicar".</p>
-        <button class="btn primary" id="set-apply">Aplicar</button>
-      </div>
-      <div class="card">
-        <h3>Relatório consolidado</h3>
-        <p class="muted">Gera um arquivo Markdown com os principais resultados das análises já rodadas.</p>
-        <button class="btn primary" id="btn-report">Gerar relatório (.md)</button>
-      </div>
-      <div class="card">
-        <h3>Histórico de análises</h3>
-        <div id="settings-history"></div>
-        <button class="btn danger" id="set-clear-history">Limpar histórico</button>
-      </div>
-      <div class="card">
-        <h3>Sobre e atribuição</h3>
-        <p class="muted">
-          Dados do estudo <span class="mono">all_phase2_target_2018_pub</span> (TARGET, NCI) distribuídos via
-          <a href="https://www.cbioportal.org/study/summary?id=all_phase2_target_2018_pub" target="_blank" rel="noopener">cBioPortal</a>.
-          Dados TARGET destinam-se exclusivamente à pesquisa biomédica com dados pediátricos; siga as
-          <a href="https://ocg.cancer.gov/programs/target/target-publication-guidelines" target="_blank" rel="noopener">diretrizes de publicação do TARGET</a>.
-          As análises reproduzem, em JavaScript, os blocos do <span class="mono">referencias/Script.R</span>.
-        </p>
-      </div>
     </section>
   </main>
 

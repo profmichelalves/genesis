@@ -2,7 +2,7 @@
    Estratégia: cache-first para o app shell (mesmo domínio) e
    stale-while-revalidate para o Plotly CDN. Os dados de estudo ficam
    em IndexedDB (gerenciado pela aplicação), não aqui. */
-const CACHE = 'tall-explorer-v1';
+const CACHE = 'tall-explorer-v3';
 const APP_SHELL = [
   './',
   './index.html',

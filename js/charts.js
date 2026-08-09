@@ -49,23 +49,23 @@
 
   /* Bloco 2 — Volcano plot (DEA) */
   C.volcano = function (div, table) {
-    const up = table.filter((r) => r.direction === 'up');
-    const down = table.filter((r) => r.direction === 'down');
-    const ns = table.filter((r) => r.direction === 'ns');
+    const up = table.filter((r) => r.color_grp === 'Upregulado');
+    const down = table.filter((r) => r.color_grp === 'Downregulado');
+    const ns = table.filter((r) => r.color_grp === 'NS');
     const mk = (rows, color) => ({
-      x: rows.map((r) => r.logFC), y: rows.map((r) => -Math.log10(r['P.Value'])),
+      x: rows.map((r) => r.logFC), y: rows.map((r) => -Math.log10(Math.max(r['adj.P.Val'], 1e-300))),
       text: rows.map((r) => r.gene), mode: 'markers',
       type: 'scatter', name: '',
       marker: { size: 4, color, opacity: 0.7 },
-      hovertemplate: '%{text}<br>log2FC=%{x:.2f}<br>-log10p=%{y:.2f}<extra></extra>'
+      hovertemplate: '%{text}<br>log2FC=%{x:.2f}<br>-log10(adj.p)=%{y:.2f}<extra></extra>'
     });
     const data = [
       mk(up, '#d64545'), mk(down, '#2d6cdf'), mk(ns, '#9aa3af')
     ];
     const layout = Object.assign(LAYOUT_BASE(), {
-      title: 'Expressão diferencial — Relapse vs Não',
+      title: 'Volcano — Relapse vs None (adj. p)',
       xaxis: { title: 'log2FC', gridcolor: theme().grid },
-      yaxis: { title: '-log10(p)', gridcolor: theme().grid },
+      yaxis: { title: '-log10(adj. p)', gridcolor: theme().grid },
       shapes: [{ type: 'line', x0: 0, x1: 0, y0: 0, y1: 1, xref: 'x', yref: 'paper', line: { color: theme().grid, dash: 'dot' } }]
     });
     Plotly.react(div, data, layout, CFG);
@@ -79,9 +79,9 @@
       marker: { size: 4, color, opacity: 0.7 },
       hovertemplate: '%{text}<br>A=%{x:.2f}<br>M=%{y:.2f}<extra></extra>'
     });
-    const up = table.filter((r) => r.direction === 'up');
-    const down = table.filter((r) => r.direction === 'down');
-    const ns = table.filter((r) => r.direction === 'ns');
+    const up = table.filter((r) => r.color_grp === 'Upregulado');
+    const down = table.filter((r) => r.color_grp === 'Downregulado');
+    const ns = table.filter((r) => r.color_grp === 'NS');
     const data = [mk(up, '#d64545'), mk(down, '#2d6cdf'), mk(ns, '#9aa3af')];
     const layout = Object.assign(LAYOUT_BASE(), {
       title: 'MA plot (média vs razão)',

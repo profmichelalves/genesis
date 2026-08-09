@@ -7,6 +7,10 @@
   const API = TALL.api;
   const ST = TALL.storage;
 
+  /* versão do formato de dados — incrementar ao mudar a estrutura dos pacotes
+     (ex.: pivotClinical) para invalidar datapacks antigos no IndexedDB */
+  const DATA_VERSION = 2;
+
   const CLIN_ATTRS = [
     'PATIENT_ID', 'OS_MONTHS', 'OS_STATUS', 'DAYS_TO_EVENT', 'FIRST_EVENT',
     'AGE_IN_DAYS', 'GENDER', 'MOLECULAR_SUBTYPE', 'ANALYSIS_COHORT',
@@ -63,6 +67,7 @@
       if (!rows.has(r.patientId)) { rows.set(r.patientId, {}); }
       const row = rows.get(r.patientId);
       row[r.clinicalAttributeId] = r.value;
+      row.PATIENT_ID = r.patientId;
     }
     const rowArr = Array.from(rows.values());
     for (const r of records) if (!attrOrder.includes(r.clinicalAttributeId)) attrOrder.push(r.clinicalAttributeId);
@@ -149,8 +154,10 @@
 
     // amostras sequenciadas (mutações)
     let seqSampleIds;
-    const seqList = listById[API.PROFILE_MUT];
-    if (seqList) seqSampleIds = await API.getSampleListIds(API.PROFILE_MUT);
+    const seqList = listById[API.PROFILE_MUT] ||
+      Object.values(listById).find((l) => /sequenced/i.test(l.sampleListId)) ||
+      Object.values(listById).find((l) => /mutation_data/i.test(l.category || ''));
+    if (seqList) seqSampleIds = await API.getSampleListIds(seqList.sampleListId);
     else seqSampleIds = rnaSampleIds;
     seqSampleIds = seqSampleIds.filter((id) => !String(id).includes('.'));
 
@@ -196,6 +203,7 @@
     const geneMeta = expr.map((g) => ({ symbol: g.symbol, entrez: g.entrez }));
     const pack = {
       scope,
+      dataVersion: DATA_VERSION,
       buildDate: new Date().toISOString(),
       rnaSampleIds, seqSampleIds,
       sampleToPatient: Object.fromEntries(sampleToPatient),
@@ -215,6 +223,7 @@
   D.loadFromCache = async function () {
     const pack = await ST.get('meta', 'pack');
     if (!pack) return null;
+    if (pack.dataVersion !== DATA_VERSION) return null;
     const clinical = await ST.get('clinical', 'all');
     const mut = await ST.get('mut', 'agg');
     const emeta = await ST.get('expr', 'meta');
