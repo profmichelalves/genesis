@@ -46,7 +46,7 @@
       <p class="sub">Estudo <span class="mono" id="dash-study">—</span> · TARGET ALL — dados públicos via cBioPortal.</p>
       <div class="grid stats" id="dash-stats"></div>
       <div class="card">
-        <h3>Download do estudo</h3>
+        <div class="card-head"><h3>Download do estudo</h3><button type="button" class="chart-help" data-help="download" aria-label="Explicação desta seção" title="Explicação desta seção">i</button></div>
         <div id="dash-datapack"></div>
       </div>
       <div class="grid cards">
@@ -62,6 +62,7 @@
       <h2>Dados clínicos</h2>
       <p class="sub" id="clinical-sub"></p>
       <div class="card">
+        <div class="card-head"><h3>Tabela de dados clínicos</h3><button type="button" class="chart-help" data-help="clinical" aria-label="Explicação desta seção" title="Explicação desta seção">i</button></div>
         <div class="row">
           <div class="field"><label for="clin-filter">Filtrar (texto)</label><input type="text" id="clin-filter" placeholder="ex.: Relapse" /></div>
           <div class="field auto"><label>&nbsp;</label><button class="btn" id="clin-csv">Exportar CSV</button></div>
@@ -78,15 +79,15 @@
       <h2>Top 30 genes mais mutados</h2>
       <p class="sub" id="top30-sub"></p>
       <div class="card">
+        <div class="card-head"><h3>Top 30 — barras</h3><button type="button" class="chart-help" data-help="top30" aria-label="Explicação deste gráfico" title="Explicação deste gráfico">i</button></div>
         <div class="row" style="margin-bottom:8px">
           <div class="field auto"><label>&nbsp;</label><button class="btn primary" id="top30-run">Gerar / Atualizar</button></div>
           <div class="field auto"><label>&nbsp;</label><button class="btn" id="top30-csv">Exportar CSV</button></div>
-          <div class="field auto"><label>&nbsp;</label><button type="button" class="chart-help" data-help="top30" aria-label="Explicação deste gráfico" title="Explicação deste gráfico">i</button></div>
         </div>
         <div id="top30-chart" class="plot tall"></div>
       </div>
       <div class="card">
-        <h3>Tabela</h3>
+        <div class="card-head"><h3>Tabela</h3><button type="button" class="chart-help" data-help="top30-table" aria-label="Explicação desta tabela" title="Explicação desta tabela">i</button></div>
         <div class="table-wrap"><table class="data" id="top30-table"></table></div>
       </div>
     </section>
@@ -96,6 +97,7 @@
       <h2>Expressão diferencial — Relapse vs None</h2>
       <p class="sub" id="dea-sub"></p>
       <div class="card">
+        <div class="card-head"><h3>Parâmetros da DEA</h3><button type="button" class="chart-help" data-help="dea" aria-label="Explicação desta seção" title="Explicação desta seção">i</button></div>
         <div class="row">
           <div class="field auto"><label>&nbsp;</label><button class="btn primary" id="dea-run">Rodar DEA</button></div>
           <div class="field auto"><label>&nbsp;</label><button class="btn" id="dea-csv">Exportar CSV</button></div>
@@ -107,7 +109,7 @@
         <div class="card"><div class="card-head"><h3>MA plot</h3><button type="button" class="chart-help" data-help="ma" aria-label="Explicação deste gráfico" title="Explicação deste gráfico">i</button></div><div id="dea-ma" class="plot"></div></div>
       </div>
       <div class="card"><div class="card-head"><h3>Heatmap — Top DEGs</h3><button type="button" class="chart-help" data-help="heatmap" aria-label="Explicação deste gráfico" title="Explicação deste gráfico">i</button></div><div id="dea-heatmap" class="plot tall"></div></div>
-      <div class="card"><h3>Tabela de resultados</h3><div class="table-wrap"><table class="data" id="dea-table"></table></div></div>
+      <div class="card"><div class="card-head"><h3>Tabela de resultados</h3><button type="button" class="chart-help" data-help="dea-table" aria-label="Explicação desta tabela" title="Explicação desta tabela">i</button></div><div class="table-wrap"><table class="data" id="dea-table"></table></div></div>
     </section>
 
     <!-- ======================= KM ======================= -->
@@ -115,6 +117,7 @@
       <h2>Curvas de Kaplan-Meier</h2>
       <p class="sub" id="km-sub"></p>
       <div class="card">
+        <div class="card-head"><h3>Configuração</h3><button type="button" class="chart-help" data-help="km" aria-label="Explicação desta seção" title="Explicação desta seção">i</button></div>
         <div class="row">
           <div class="field" style="flex:1 1 320px"><label for="km-genes">Genes (separados por vírgula; vazio = top 10)</label><input type="text" id="km-genes" placeholder="ex.: TP53, ETV6, RUNX1" /></div>
           <div class="field auto"><label>&nbsp;</label><button class="btn primary" id="km-run">Gerar curvas</button></div>
@@ -129,6 +132,7 @@
       <h2>Regressão de Cox — tempo de sobrevida</h2>
       <p class="sub" id="cox-sub"></p>
       <div class="card">
+        <div class="card-head"><h3>Configuração</h3><button type="button" class="chart-help" data-help="cox" aria-label="Explicação desta seção" title="Explicação desta seção">i</button></div>
         <div class="row">
           <div class="field" style="flex:1 1 320px"><label for="cox-genes">Genes (vazio = top 10 DEGs/expressos)</label><input type="text" id="cox-genes" placeholder="ex.: TP53, ETV6, RUNX1" /></div>
           <div class="field auto"><label>&nbsp;</label><button class="btn primary" id="cox-run">Rodar Cox</button></div>
@@ -137,8 +141,8 @@
         <p class="muted" id="cox-summary"></p>
       </div>
       <div class="card"><div class="card-head"><h3>Forest plot — Cox univariado</h3><button type="button" class="chart-help" data-help="forest" aria-label="Explicação deste gráfico" title="Explicação deste gráfico">i</button></div><div id="cox-forest" class="plot"></div></div>
-      <div class="card"><h3>Cox multivariado (genes p &lt; 0.1)</h3><div class="table-wrap"><table class="data" id="cox-multi-table"></table></div></div>
-      <div class="card"><h3>Cox univariado</h3><div class="table-wrap"><table class="data" id="cox-table"></table></div></div>
+      <div class="card"><div class="card-head"><h3>Cox multivariado (genes p &lt; 0.1)</h3><button type="button" class="chart-help" data-help="cox-multi" aria-label="Explicação desta tabela" title="Explicação desta tabela">i</button></div><div class="table-wrap"><table class="data" id="cox-multi-table"></table></div></div>
+      <div class="card"><div class="card-head"><h3>Cox univariado</h3><button type="button" class="chart-help" data-help="forest" aria-label="Explicação desta tabela" title="Explicação desta tabela">i</button></div><div class="table-wrap"><table class="data" id="cox-table"></table></div></div>
     </section>
   </main>
 

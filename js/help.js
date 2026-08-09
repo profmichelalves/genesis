@@ -27,6 +27,41 @@
          'É uma estatística descritiva do desenho do estudo — não envolve teste de hipóteses.')
   };
 
+  /* ---------- Dashboard: download do estudo ---------- */
+  H['download'] = {
+    title: 'Download do estudo',
+    html:
+      '<p>Baixa os dados públicos do estudo TARGET ALL (Leucemia Linfoide Aguda pediátrica) ' +
+      'a partir do cBioPortal e os armazena no navegador (IndexedDB). Com isso, todas as ' +
+      'análises rodam <b>100% localmente</b> — inclusive offline, depois do download.</p>' +
+      h4('Escopos') +
+      ul(b('Expresso (recomendado)') + ' — painel curado com ~500 genes relevantes para a ' +
+         'doença; download rápido e suficiente para as análises da plataforma.',
+         b('Completo') + ' — todos os ~26 mil genes; download pesado (centenas de MB), ' +
+         'recomendado apenas quando o conjunto completo for necessário.') +
+      h4('Como funciona') +
+      ul('Na primeira execução, os dados são baixados e guardados em cache local.',
+         'Depois de baixado, os botões passam a oferecer "Reconstruir" (atualiza o cache) e ' +
+         '"Apagar dados" (remove o estudo do navegador).',
+         'Após o download, os dados não saem mais da sua máquina: tudo é processado aqui.')
+  };
+
+  /* ---------- Dashboard: tabela de dados clínicos ---------- */
+  H['clinical'] = {
+    title: 'Tabela de dados clínicos',
+    html:
+      '<p>Lista dos pacientes do estudo com seus atributos clínicos (idade, sexo, ' +
+      'estratificação de risco, desfechos, tempo de sobrevida, etc.).</p>' +
+      h4('Como usar') +
+      ul('O campo <b>Filtrar (texto)</b> busca em todas as colunas ao mesmo tempo ' +
+         '(ex.: <code>Relapse</code>, <code>Masculino</code> ou um ID de paciente).',
+         'O botão <b>Exportar CSV</b> baixa a tabela (filtrada) completa, sem o limite de exibição.',
+         'A tabela mostra até <b>500 linhas</b> por vez; o contador abaixo informa o total encontrado.') +
+      h4('Nota') +
+      ul('Esta é a base que alimenta as análises de sobrevida (Kaplan-Meier e Cox) e a ' +
+         'definição de grupos da expressão diferencial (Relapse vs None).')
+  };
+
   /* ---------- Top 30 ---------- */
   H['top30'] = {
     title: 'Top 30 genes mais mutados',
@@ -41,7 +76,43 @@
       ul('A frequência relativa é <code>N / total de amostras sequenciadas</code> (exibida na tabela ao lado).',
          'Genes no topo são <b>candidatos a genes motores</b> (drivers) e são reaproveitados no ' +
          'painel de Kaplan-Meier e Cox quando também expressos.',
-         'Não há teste estatístico aqui — é ranking por frequência bruta.')
+          'Não há teste estatístico aqui — é ranking por frequência bruta.')
+  };
+
+  /* ---------- Top 30: tabela ---------- */
+  H['top30-table'] = {
+    title: 'Tabela — Top 30 genes mais mutados',
+    html:
+      '<p>Versão tabular do gráfico de barras: os <b>30 genes</b> com maior número de ' +
+      'amostras mutadas, com a frequência relativa.</p>' +
+      h4('Colunas') +
+      ul(b('Gene') + ' — símbolo do gene.',
+         b('N amostras') + ' — número de amostras WES com mutação não sinônima (SNV/indel).',
+         b('Frequência (%)') + ' — N / total de amostras sequenciadas × 100.') +
+      h4('Leitura') +
+      ul('Genes do topo são <b>candidatos a genes motores</b> (drivers) e são reaproveitados ' +
+         'no Kaplan-Meier e no Cox quando também expressos.',
+         'É um ranking por frequência bruta — não envolve teste estatístico.')
+  };
+
+  /* ---------- DEA: parâmetros ---------- */
+  H['dea'] = {
+    title: 'Expressão diferencial — parâmetros',
+    html:
+      '<p>Configura e resume o teste de expressão diferencial entre pacientes com recidiva ' +
+      '(<b>Relapse</b>) e sem evento (<b>None</b>). O teste segue o estilo limma: teste t com ' +
+      'variância agrupada e moderação bayesiana empírica, com p-values corrigidos por ' +
+      '<b>FDR de Benjamini–Hochberg</b>.</p>' +
+      h4('Resumo gerado') +
+      ul('Nº de amostras em cada grupo (Relapse e None), total de genes testados e quantos ' +
+         'são diferencialmente expressos (DE).',
+         '<code>prior df (d0)</code> — graus de liberdade do prior empírico: valor alto ' +
+         'significa pouca moderação (variâncias semelhantes entre genes).',
+         '<code>s0²</code> — variância do prior empírico, usada para encolher a variância ' +
+         'de cada gene em direção à tendência global.') +
+      h4('Botões') +
+      ul(b('Rodar DEA') + ' — executa o teste completo (volcano, MA plot, heatmap e tabela).',
+         b('Exportar CSV') + ' — baixa a tabela completa de resultados.')
   };
 
   /* ---------- Volcano ---------- */
@@ -115,6 +186,27 @@
          'assinaturas antagônicas — útil para gerar hipóteses, não conclusões causais.')
   };
 
+  /* ---------- DEA: tabela de resultados ---------- */
+  H['dea-table'] = {
+    title: 'Tabela de resultados da DEA',
+    html:
+      '<p>Resultado completo do teste de expressão diferencial para todos os genes, ' +
+      'ordenado por significância (adj. p).</p>' +
+      h4('Colunas') +
+      ul(b('Gene') + ' — símbolo do gene.',
+         b('logFC') + ' — diferença de expressão em escala log2 (positivo = mais expresso ' +
+         'no grupo Relapse).',
+         b('AveExpr') + ' — expressão média do gene nas amostras analisadas.',
+         b('t') + ' — estatística t do teste moderado.',
+         b('P.Value') + ' — p-value bruto.',
+         b('adj.P.Val') + ' — p-value ajustado (FDR de Benjamini–Hochberg).',
+         b('Classificação') + ' — Upregulado / Downregulado / NS conforme os limiares ' +
+         '(adj. p &lt; 0.05 e |log2FC| &gt; 0.5).') +
+      h4('Leitura') +
+      ul('Ordene por adj.P.Val para os achados mais robustos.',
+         'A tabela exibe até 200 linhas; o CSV exporta o conjunto completo.')
+  };
+
   /* ---------- Kaplan-Meier ---------- */
   H['km'] = {
     title: 'Kaplan-Meier — Sobrevida por expressão do gene',
@@ -144,6 +236,24 @@
          'comparações</b> — p &lt; 0.05 deve ser encarado como evidência exploratória.')
   };
 
+  /* ---------- Cox: parâmetros ---------- */
+  H['cox'] = {
+    title: 'Regressão de Cox — parâmetros',
+    html:
+      '<p>Configura a análise de sobrevivência pela <b>regressão de Cox</b> de riscos ' +
+      'proporcionais do tempo até o evento (OS — sobrevida global, ou DFS — livre de ' +
+      'doença). A expressão de cada gene é <b>padronizada</b> (z-score), portanto o hazard ' +
+      'ratio descreve o efeito de um aumento de <b>1 desvio padrão</b>.</p>' +
+      h4('Entrada') +
+      ul('Genes separados por vírgula, ou campo vazio para usar os candidatos padrão: ' +
+         'top 10 DEGs e top 30 mutados que possuem dados de expressão.') +
+      h4('Resultado') +
+      ul('São gerados o <b>forest plot</b> e as tabelas <b>univariada</b> e ' +
+         '<b>multivariada</b>.',
+         'Na tabela univariada, genes com p &lt; 0.05 são marcados com <b>*</b>.',
+         b('Exportar CSV') + ' — baixa os resultados univariados.')
+  };
+
   /* ---------- Forest plot (Cox) ---------- */
   H['forest'] = {
     title: 'Forest plot — Cox univariado',
@@ -168,8 +278,30 @@
       ul('Modelo <b>univariado</b> — não ajusta para covariáveis; associações podem refletir ' +
          'confundimento.',
          'Assume-se <b>proporcionalidade dos riscos</b> (efeito constante no tempo).',
-         'Múltiplos genes testados — aplicar correção para comparações múltiplas antes de ' +
-         'conclusões.')
+          'Múltiplos genes testados — aplicar correção para comparações múltiplas antes de ' +
+          'conclusões.')
+  };
+
+  /* ---------- Cox multivariado (tabela) ---------- */
+  H['cox-multi'] = {
+    title: 'Cox multivariado',
+    html:
+      '<p>Modelo de Cox com <b>várias covariáveis (genes) ajustadas simultaneamente</b>, ' +
+      'estimando o efeito de cada gene controlado pelos demais. A expressão é padronizada ' +
+      '(z-score): o HR refere-se a um aumento de 1 desvio padrão.</p>' +
+      h4('Seleção de variáveis') +
+      ul('Entram os genes com <b>p &lt; 0.1</b> no Cox univariado, limitados a ' +
+         '<b>10 covariáveis</b> para estabilidade numérica.') +
+      h4('Colunas') +
+      ul(b('Covariável') + ' — gene incluído no modelo.',
+         b('HR') + ' — hazard ratio ajustado pelas demais covariáveis.',
+         b('IC95%') + ' — intervalo de confiança de 95% de Wald.',
+         b('p') + ' — p-value do coeficiente.') +
+      h4('Cautelas') +
+      ul('O ajuste simultâneo reduz confundimento, mas o número de eventos limita quantas ' +
+         'covariáveis são estimadas de forma confiável.',
+         'Compare com o univariado: genes significativos nos dois modelos são os achados ' +
+         'mais consistentes.')
   };
 
   window.TALL = window.TALL || {};

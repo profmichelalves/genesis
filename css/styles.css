@@ -119,6 +119,9 @@ h3 { font-size: 1.05rem; margin: 20px 0 8px; }
 .card h3 { margin-top: 0; }
 
 .grid { display: grid; gap: 12px; }
+/* itens do grid não podem crescer além do track (conteúdo largo — ex.: plot Plotly
+   renderizado em painel oculto com largura fixa — estoura a tela em viewports menores) */
+.grid > * { min-width: 0; }
 .grid.stats { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 16px; }
 .grid.cards { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
 @media (max-width: 640px) { .grid.cards { grid-template-columns: 1fr; } }
@@ -286,8 +289,8 @@ table.data .mono { font-family: var(--mono); font-size: .78rem; }
 .modal-body li { margin-bottom: 6px; }
 .modal-body code { font-family: var(--mono); font-size: .8rem; background: var(--bg-3); padding: 1px 5px; border-radius: 5px; }
 
-/* botão "i" de ajuda dos gráficos (cabeçalho dos cards) */
-.card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* botão "i" de ajuda (cabeçalho dos cards) — alinhado ao topo à direita */
+.card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .card-head h3 { margin: 0; }
 .chart-help {
   flex: none;
