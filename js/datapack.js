@@ -1,4 +1,4 @@
-/* TARGET ALL Explorer — pipeline de dados.
+/* Genesis — pipeline de dados.
    Baixa, normaliza e agrega: clínicos → mapa de genes → mutações → expressão.
    Escopos: 'expresso' (painel curado) e 'completo' (todos os genes). */
 (function () {

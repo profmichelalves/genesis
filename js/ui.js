@@ -1,4 +1,4 @@
-/* TARGET ALL Explorer — UI: abas, toast, modal, tabelas, progresso, tema. */
+/* Genesis — UI: abas, toast, modal, tabelas, progresso, tema. */
 (function () {
   'use strict';
   const U = {};
@@ -21,8 +21,19 @@
     });
     document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') U.closeModal(); });
 
+    // ajuda dos gráficos: ícone "i" ([data-help]) abre modal com a explicação
+    document.addEventListener('click', (ev) => {
+      const btn = ev.target.closest ? ev.target.closest('[data-help]') : null;
+      if (!btn) return;
+      const entry = helpMap[btn.getAttribute('data-help')];
+      if (entry) U.modal(entry.title, entry.html);
+    });
+
     U.applyTheme(localStorage.getItem('tall-theme') || 'light');
   };
+
+  let helpMap = {};
+  U.setHelp = function (map) { helpMap = map || {}; };
 
   U.goto = function (name) {
     document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
@@ -113,6 +124,29 @@
   /* ---------- spinner / busy ---------- */
   U.busy = function (msg) {
     U.toast(msg || 'Processando…', 'info');
+  };
+
+  /* ---------- loading (overlay com o layout do ícone) ---------- */
+  let loadingEl = null;
+  U.loading = function (msg) {
+    if (!loadingEl) {
+      loadingEl = document.createElement('div');
+      loadingEl.className = 'loading-backdrop';
+      loadingEl.setAttribute('role', 'status');
+      loadingEl.setAttribute('aria-live', 'polite');
+      loadingEl.innerHTML =
+        '<div class="loading"><div class="loading-box">' +
+        '<img class="loading-logo" src="icons/icon-192.png" alt="" />' +
+        '<span class="loading-ring"></span></div>' +
+        '<p class="loading-msg" id="loading-msg">Carregando…</p></div>';
+      document.body.appendChild(loadingEl);
+    }
+    const m = loadingEl.querySelector('#loading-msg');
+    if (msg) m.textContent = msg;
+    loadingEl.classList.add('open');
+  };
+  U.endLoading = function () {
+    if (loadingEl) loadingEl.classList.remove('open');
   };
 
   window.TALL = window.TALL || {}; window.TALL.ui = U;

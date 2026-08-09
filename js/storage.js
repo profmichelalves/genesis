@@ -1,4 +1,4 @@
-/* TARGET ALL Explorer — camada IndexedDB.
+/* Genesis — camada IndexedDB.
    Guarda: metadados, dados clínicos, mapa de genes, linhas de expressão
    (Float32Array por gene), agregação de mutações, resultados e histórico. */
 (function () {

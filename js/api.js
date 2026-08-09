@@ -1,4 +1,4 @@
-/* TARGET ALL Explorer — cliente da API pública do cBioPortal.
+/* Genesis — cliente da API pública do cBioPortal.
    Endpoints validados em 2026-08-08 (ver PLANO_APP.md, seção 3). */
 (function () {
   'use strict';

@@ -1,0 +1,270 @@
+> source("~/resultados_TARGET_ALL/Script.R")
+Resultados serão salvos em: C:\Users\x3x31\Documents\resultados_TARGET_ALL
+
+=================================================================
+  BLOCO 1 — Carregamento dos Dados (TARGET ALL)
+=================================================================
+Estudos ALL encontrados:
+# A tibble: 14 × 3
+   studyId                    name                                                          allSampleCount
+   <chr>                      <chr>                                                                  <int>
+ 1 all_stjude_2015            Acute Lymphoblastic Leukemia (St Jude, Nat Genet 2015)                    93
+ 2 all_stjude_2013            Hypodiploid Acute Lymphoid Leukemia (St Jude, Nat Genet 2013)             44
+ 3 all_stjude_2016            Acute Lymphoblastic Leukemia (St Jude, Nat Genet 2016)                    73
+ 4 all_phase2_target_2018_pub Pediatric Acute Lymphoid Leukemia - Phase II (TARGET, 2018)             1978
+ 5 aml_target_2018_pub        Pediatric Acute Myeloid Leukemia (TARGET, 2018)                         1025
+ 6 nbl_target_2018_pub        Pediatric Neuroblastoma (TARGET, 2018)                                  1089
+ 7 alal_target_gdc            Acute Leukemias of Ambiguous Lineage (TARGET GDC, 2025)                  251
+ 8 aml_target_gdc             Acute Myeloid Leukemia (TARGET GDC, 2025)                               2766
+ 9 bll_target_gdc             B-Lymphoblastic Leukemia/Lymphoma (TARGET GDC, 2025)                     989
+10 nbl_target_gdc             Neuroblastoma (TARGET GDC, 2025)                                         533
+11 os_target_gdc              Osteosarcoma (TARGET GDC, 2025)                                          159
+12 wt_target_2018_pub         Pediatric Wilms' Tumor (TARGET, 2018)                                    657
+13 wt_target_gdc              Wilms' Tumor (TARGET GDC, 2025)                                          132
+14 rt_target_2018_pub         Pediatric Rhabdoid Tumor (TARGET, 2018)                                   72
+Estudo selecionado: all_phase2_target_2018_pub
+Baixando dados...
+Working on: C:\Users\x3x31\AppData\Local\Temp\RtmpyqLN0Z/all_phase2_target_2018_pub/all_phase2_target_2018_pub/data_cna.txt
+Working on: C:\Users\x3x31\AppData\Local\Temp\RtmpyqLN0Z/all_phase2_target_2018_pub/all_phase2_target_2018_pub/data_cna_hg19.seg
+Working on: C:\Users\x3x31\AppData\Local\Temp\RtmpyqLN0Z/all_phase2_target_2018_pub/all_phase2_target_2018_pub/data_gene_panel_matrix.txt
+Working on: C:\Users\x3x31\AppData\Local\Temp\RtmpyqLN0Z/all_phase2_target_2018_pub/all_phase2_target_2018_pub/data_methylation_hm27.txt
+Working on: C:\Users\x3x31\AppData\Local\Temp\RtmpyqLN0Z/all_phase2_target_2018_pub/all_phase2_target_2018_pub/data_mirna.txt
+Working on: C:\Users\x3x31\AppData\Local\Temp\RtmpyqLN0Z/all_phase2_target_2018_pub/all_phase2_target_2018_pub/data_mrna_agilent_microarray.txt
+Working on: C:\Users\x3x31\AppData\Local\Temp\RtmpyqLN0Z/all_phase2_target_2018_pub/all_phase2_target_2018_pub/data_mrna_agilent_microarray_zscores_ref_all_samples.txt
+Working on: C:\Users\x3x31\AppData\Local\Temp\RtmpyqLN0Z/all_phase2_target_2018_pub/all_phase2_target_2018_pub/data_mrna_agilent_microarray_zscores_ref_diploid_samples.txt
+Working on: C:\Users\x3x31\AppData\Local\Temp\RtmpyqLN0Z/all_phase2_target_2018_pub/all_phase2_target_2018_pub/data_mrna_seq_rpkm.txt
+Working on: C:\Users\x3x31\AppData\Local\Temp\RtmpyqLN0Z/all_phase2_target_2018_pub/all_phase2_target_2018_pub/data_mrna_seq_rpkm_zscores_ref_all_samples.txt
+Working on: C:\Users\x3x31\AppData\Local\Temp\RtmpyqLN0Z/all_phase2_target_2018_pub/all_phase2_target_2018_pub/data_mrna_seq_rpkm_zscores_ref_diploid_samples.txt
+Working on: C:\Users\x3x31\AppData\Local\Temp\RtmpyqLN0Z/all_phase2_target_2018_pub/all_phase2_target_2018_pub/data_mutations.txt
+harmonizing input:
+  removing 851 colData rownames not in sampleMap 'primary'
+
+Experimentos disponíveis:
+ [1] "cna"                                                 "cna_hg19.seg"                                       
+ [3] "methylation_hm27"                                    "mirna"                                              
+ [5] "mrna_agilent_microarray"                             "mrna_agilent_microarray_zscores_ref_all_samples"    
+ [7] "mrna_agilent_microarray_zscores_ref_diploid_samples" "mrna_seq_rpkm"                                      
+ [9] "mrna_seq_rpkm_zscores_ref_all_samples"               "mrna_seq_rpkm_zscores_ref_diploid_samples"          
+[11] "mutations"                                          
+
+=================================================================
+  BLOCO 2 — Dados Clínicos
+=================================================================
+Variáveis clínicas (51 colunas):
+ [1] "PATIENT_ID"                        "SAMPLE_ID"                         "BONE_MARROW_SITE_OF_RELAPSE"      
+ [4] "CNS_SITE_OF_RELAPSE"               "TESTES_SITE_OF_RELAPSE"            "OTHER_SITE_OF_RELAPSE"            
+ [7] "ETV6_RUNX1_FUSION_STATUS"          "TRISOMY_4_10"                      "MLL_STATUS"                       
+[10] "BCR_ABL1_STATUS"                   "TCF3_PBX1_STATUS"                  "DNA_INDEX"                        
+[13] "CELL_OF_ORIGIN"                    "MOLECULAR_SUBTYPE"                 "ONCOTREE_CODE"                    
+[16] "ANALYSIS_COHORT"                   "CANCER_TYPE"                       "CANCER_TYPE_DETAILED"             
+[19] "SOMATIC_STATUS"                    "TMB_NONSYNONYMOUS"                 "SEX"                              
+[22] "RACE"                              "ETHNICITY"                         "AGE"                              
+[25] "AGE_IN_DAYS"                       "WBC"                               "CNS_STATUS"                       
+[28] "TESTICULAR_INVOLVEMENT"            "MRD_PERCENT_DAY_8"                 "MRD_PERCENT_DAY_8_SENSITIVITY"    
+[31] "MRD_PERCENT_DAY_29"                "MRD_PERCENT_DAY_29_SENSITIVITY"    "MRD_PERCENT_DAY_43"               
+[34] "MRD_PERCENT_DAY_43_SENSITIVITY"    "MRD_END_CONSOLIDATION"             "MRD_END_CONSOLIDATION_SENSITIVITY"
+[37] "FIRST_EVENT"                       "DAYS_TO_EVENT"                     "OS_STATUS"                        
+[40] "OS_DAYS"                           "OS_MONTHS"                         "DAYS_TO_DEATH"                    
+[43] "BM_DAY_8"                          "BM_DAY_15"                         "BM_DAY_29"                        
+[46] "BM_DAY_43"                         "KARYOTYPE"                         "CONGENITAL_ABNORMALITY"           
+[49] "PROTOCOL"                          "ALTERNATE_THERAPY"                 "ALTERNATE_THERAPY_OTHER"          
+
+Colunas de sobrevida identificadas:
+  OS tempo : OS_MONTHS
+  OS evento: OS_STATUS
+  DFS tempo: NÃO ENCONTRADA
+  DFS evento:NÃO ENCONTRADA
+Endpoint de sobrevida: OS (Sobrevida Global)
+Eventos: 454 / 1126
+clinical_data.csv salvo.
+
+=================================================================
+  BLOCO 3 — Top 30 Genes Mais Mutados/Alterados
+=================================================================
+Experimento de mutação: mutations
+Classe: RaggedExperiment | Dimensões: 759 x 150
+Top 30 genes mais mutados:
+# A tibble: 30 × 3
+   Gene   n_amostras freq_relativa
+   <chr>       <dbl>         <dbl>
+ 1 NRAS           16          10.7
+ 2 KRAS            8           5.3
+ 3 CREBBP          6           4  
+ 4 JAK2            6           4  
+ 5 PTPN11          6           4  
+ 6 TP53            6           4  
+ 7 CDK11A          5           3.3
+ 8 FLT3            5           3.3
+ 9 WHSC1           5           3.3
+10 NOTCH2          4           2.7
+# ℹ 20 more rows
+# ℹ Use `print(n = ...)` to see more rows
+top30_genes_mutados.csv salvo.
+fig1_top30_genes.png salvo.
+
+=================================================================
+  BLOCO 4 — Expressão Diferencial (limma) — Relapse vs None
+=================================================================
+Usando experimento: mrna_seq_rpkm
+Dimensões brutas: 26136 x 203
+Após filtragem: 24819 genes x 203 amostras
+'select()' returned many:1 mapping between keys and columns
+Matriz com símbolos: 23405 genes x 203 amostras
+Pacientes únicos: 755
+Amostras alinhadas: 203
+Alinhamento OK: TRUE
+
+Distribuição de FIRST_EVENT:
+
+Censored    Death     None  Relapse      SMN 
+       2        3       29      167        2 
+DEA: Relapse vs None (FIRST_EVENT)
+Grupos: None=29 | Relapse=167
+Genes DEG (adj.P<0.05): 1497
+Top 15 DEGs:
+        gene       logFC    adj.P.Val          signif
+1    C9orf72  -8.4973801 6.932068e-10     Down — Alta
+2   EPM2AIP1  -9.8468363 1.580677e-06     Down — Alta
+3   SERPINF2  -0.6084853 1.580677e-06 Down — Moderada
+4    NKIRAS1  -1.4388747 1.923032e-06     Down — Alta
+5     REXO6P  -0.1200133 2.264177e-06              NS
+6      DAPK1 -15.8303939 2.264177e-06     Down — Alta
+7     SMCHD1 -28.6850062 2.264177e-06     Down — Alta
+8      STAT2 -11.9292681 5.674870e-06     Down — Alta
+9     MIR221 -21.0853659 5.674870e-06     Down — Alta
+10    FRMD4A  -2.7297906 6.430571e-06     Down — Alta
+11   TMEM87B  -3.6877874 7.269809e-06     Down — Alta
+12     TESK2  -4.5590782 7.838659e-06     Down — Alta
+13 LINC02983  -0.4475167 8.281662e-06              NS
+14  MAPK8IP3 -17.3442129 1.833345e-05     Down — Alta
+15      FLT3 -64.8603130 1.833345e-05     Down — Alta
+DEA_results_relapse_vs_none.csv salvo.
+fig2_volcano.png salvo.
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+fig3_maplot.png salvo.
+fig4_heatmap_DEG.png salvo.
+
+=================================================================
+  BLOCO 5 — Curvas de Kaplan-Meier
+=================================================================
+Genes para KM: C9orf72, EPM2AIP1, SERPINF2, NKIRAS1, DAPK1, SMCHD1, STAT2, MIR221, FRMD4A, TMEM87B
+Ignoring unknown labels:
+• colour : "Expressão de C9orf72"
+KM salvo: C9orf72
+Ignoring unknown labels:
+• colour : "Expressão de EPM2AIP1"
+KM salvo: EPM2AIP1
+Ignoring unknown labels:
+• colour : "Expressão de SERPINF2"
+KM salvo: SERPINF2
+Ignoring unknown labels:
+• colour : "Expressão de NKIRAS1"
+KM salvo: NKIRAS1
+Ignoring unknown labels:
+• colour : "Expressão de DAPK1"
+KM salvo: DAPK1
+Ignoring unknown labels:
+• colour : "Expressão de SMCHD1"
+KM salvo: SMCHD1
+Ignoring unknown labels:
+• colour : "Expressão de STAT2"
+KM salvo: STAT2
+Ignoring unknown labels:
+• colour : "Expressão de MIR221"
+KM salvo: MIR221
+Ignoring unknown labels:
+• colour : "Expressão de FRMD4A"
+KM salvo: FRMD4A
+Ignoring unknown labels:
+• colour : "Expressão de TMEM87B"
+KM salvo: TMEM87B
+Ignoring unknown labels:
+• colour : "Expressão de C9orf72"
+Ignoring unknown labels:
+• colour : "Expressão de C9orf72"
+Ignoring unknown labels:
+• colour : "Expressão de EPM2AIP1"
+Ignoring unknown labels:
+• colour : "Expressão de SERPINF2"
+Ignoring unknown labels:
+• colour : "Expressão de NKIRAS1"
+fig5_KM_painel.png salvo.
+
+=================================================================
+  BLOCO 6 — Análise de Cox
+=================================================================
+N amostras para Cox: 92
+
+Cox Univariado:
+# A tibble: 10 × 6
+   Gene        HR HR_lower HR_upper p_value p_signif
+   <chr>    <dbl>    <dbl>    <dbl>   <dbl> <chr>   
+ 1 C9orf72  0.522    0.345    0.789  0.002  "*"     
+ 2 EPM2AIP1 0.705    0.52     0.956  0.0243 "*"     
+ 3 SERPINF2 0.577    0.368    0.905  0.0165 "*"     
+ 4 NKIRAS1  0.73     0.5      1.06   0.103  ""      
+ 5 DAPK1    0.523    0.343    0.797  0.0026 "*"     
+ 6 SMCHD1   0.623    0.414    0.936  0.0229 "*"     
+ 7 STAT2    0.602    0.404    0.895  0.0121 "*"     
+ 8 MIR221   0.522    0.32     0.852  0.0092 "*"     
+ 9 FRMD4A   0.651    0.409    1.04   0.0707 ""      
+10 TMEM87B  0.765    0.56     1.04   0.0918 ""      
+cox_univariado.csv salvo.
+`height` was translated to `width`.
+`height` was translated to `width`.
+fig6_forest_cox.png salvo.
+
+Cox Multivariado:
+Call:
+coxph(formula = formula_multi, data = cox_df_scaled)
+
+  n= 92, number of events= 48 
+
+             coef exp(coef) se(coef)      z Pr(>|z|)  
+C9orf72  -0.15337   0.85781  0.21071 -0.728   0.4667  
+EPM2AIP1 -0.03065   0.96982  0.25997 -0.118   0.9062  
+SERPINF2 -0.40874   0.66449  0.21483 -1.903   0.0571 .
+DAPK1    -0.36532   0.69397  0.24181 -1.511   0.1308  
+SMCHD1   -0.32547   0.72219  0.25396 -1.282   0.2000  
+STAT2    -0.73719   0.47846  0.39037 -1.888   0.0590 .
+MIR221   -0.64379   0.52530  0.28285 -2.276   0.0228 *
+FRMD4A   -0.09820   0.90647  0.32072 -0.306   0.7595  
+TMEM87B   0.68498   1.98373  0.35693  1.919   0.0550 .
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+         exp(coef) exp(-coef) lower .95 upper .95
+C9orf72     0.8578     1.1658    0.5676    1.2964
+EPM2AIP1    0.9698     1.0311    0.5826    1.6143
+SERPINF2    0.6645     1.5049    0.4361    1.0124
+DAPK1       0.6940     1.4410    0.4320    1.1147
+SMCHD1      0.7222     1.3847    0.4390    1.1880
+STAT2       0.4785     2.0901    0.2226    1.0283
+MIR221      0.5253     1.9037    0.3017    0.9145
+FRMD4A      0.9065     1.1032    0.4835    1.6996
+TMEM87B     1.9837     0.5041    0.9855    3.9930
+
+Concordance= 0.746  (se = 0.033 )
+Likelihood ratio test= 33.78  on 9 df,   p=1e-04
+Wald test            = 22.15  on 9 df,   p=0.008
+Score (logrank) test = 22.17  on 9 df,   p=0.008
+
+cox_multivariado.csv salvo.
+
+Resumo — HR e p-value por gene:
+      Gene        HR    p_value
+1  C9orf72 0.8578130 0.46669890
+2 EPM2AIP1 0.9698152 0.90615038
+3 SERPINF2 0.6644863 0.05709462
+4    DAPK1 0.6939729 0.13083691
+5   SMCHD1 0.7221897 0.19998761
+6    STAT2 0.4784571 0.05896591
+7   MIR221 0.5252994 0.02284196
+8   FRMD4A 0.9064673 0.75946010
+9  TMEM87B 1.9837262 0.05497330
+Mensagens de aviso:
+1: In readLines(url, encoding = "UTF-8") :
+  linha final incompleta encontrada em 'C:/Users/x3x31/AppData/Local/R/win-library/4.6/cBioPortalData/service/cBioPortal/api.json'
+2: In readLines(url, encoding = "UTF-8") :
+  linha final incompleta encontrada em 'C:/Users/x3x31/AppData/Local/R/win-library/4.6/cBioPortalData/service/cBioPortal/api.json'

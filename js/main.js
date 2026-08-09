@@ -1,4 +1,4 @@
-/* TARGET ALL Explorer — bootstrap e orquestração.
+/* Genesis — bootstrap e orquestração.
    Liga a UI aos motores (stats/dea/survival/cox) e aos dados (api/storage/datapack). */
 (function () {
   'use strict';
@@ -151,11 +151,13 @@
   async function doBuild(scope) {
     const btns = document.querySelectorAll('.btn-build');
     btns.forEach((b) => b.disabled = true);
+    TALL.ui.loading('Baixando estudo…');
     try {
       await TALL.datapack.build({
         scope,
         onProgress: (p) => {
           TALL.ui.progress(p.pct, p.msg);
+          TALL.ui.loading(p.msg || 'Baixando estudo…');
           const el = $('#datapack-status');
           if (el) el.textContent = p.msg + ' (' + p.pct + '%)';
         }
@@ -171,6 +173,7 @@
     } finally {
       document.querySelectorAll('.btn-build').forEach((b) => b.disabled = false);
       TALL.ui.progress(0, '');
+      TALL.ui.endLoading();
     }
   }
 
@@ -233,35 +236,36 @@
     if (!n1 || !n0) return TALL.ui.toast('Sem grupos Relapse/None definidos.', 'error');
 
     const rows = S.dp.expr.map((g) => ({ gene: g.symbol, entrez: g.entrez, values: g.values }));
-    TALL.ui.busy('Rodando DEA…');
-    const res = TALL.dea.run(rows, groups, { transform: 'none' });
+    withLoading('Rodando DEA…', () => {
+      const res = TALL.dea.run(rows, groups, { transform: 'none' });
 
-    // A (média) por gene para o MA plot
-    for (const r of res.table) r.meanExpr = +r.AveExpr.toFixed(3);
-    res.transform = 'none';
-    S.deaResult = res;
+      // A (média) por gene para o MA plot
+      for (const r of res.table) r.meanExpr = +r.AveExpr.toFixed(3);
+      res.transform = 'none';
+      S.deaResult = res;
 
-    $('#dea-sub').textContent =
-      (n1 + n0) + ' amostras (Relapse=' + n1 + ', None=' + n0 + ') · ' + res.table.length + ' genes testados · ' +
-      res.nDEG + ' DE · prior df(d0)=' + res.priorDF.toFixed(1) + ' · s0²=' + res.priorVar.toExponential(2);
-    $('#dea-summary').textContent = 'Tabela completa: ' + res.table.length + ' genes, ordenada por adj. p. Use os filtros para destacar os DE.';
+      $('#dea-sub').textContent =
+        (n1 + n0) + ' amostras (Relapse=' + n1 + ', None=' + n0 + ') · ' + res.table.length + ' genes testados · ' +
+        res.nDEG + ' DE · prior df(d0)=' + res.priorDF.toFixed(1) + ' · s0²=' + res.priorVar.toExponential(2);
+      $('#dea-summary').textContent = 'Tabela completa: ' + res.table.length + ' genes, ordenada por adj. p. Use os filtros para destacar os DE.';
 
-    TALL.charts.volcano('#dea-volcano', res.table);
-    TALL.charts.ma('#dea-ma', res.table);
-    renderHeatmap(res);
-    TALL.ui.renderTable($('#dea-table'),
-      ['Gene', 'logFC', 'AveExpr', 't', 'P.Value', 'adj.P.Val', 'Classificação'],
-      res.table.slice(0, 200).map((r) => [
-        r.gene, r.logFC.toFixed(3), r.meanExpr, r.t.toFixed(2),
-        r['P.Value'].toExponential(2), r['adj.P.Val'].toExponential(2), r.signif
-      ]));
+      TALL.charts.volcano('#dea-volcano', res.table);
+      TALL.charts.ma('#dea-ma', res.table);
+      renderHeatmap(res);
+      TALL.ui.renderTable($('#dea-table'),
+        ['Gene', 'logFC', 'AveExpr', 't', 'P.Value', 'adj.P.Val', 'Classificação'],
+        res.table.slice(0, 200).map((r) => [
+          r.gene, r.logFC.toFixed(3), r.meanExpr, r.t.toFixed(2),
+          r['P.Value'].toExponential(2), r['adj.P.Val'].toExponential(2), r.signif
+        ]));
+    });
   }
 
   function renderHeatmap(res) {
     // Script.R: top 40 DEGs (signif != NS), ordenados por adj.P
     const top = res.table.filter((r) => r.signif !== 'NS').slice(0, 40);
     if (top.length < 2) {
-      $('#dea-heatmap').innerHTML = '<p class="muted">Menos de 2 genes DE (limiares do Script.R: adj.P<0.05 e |log2FC|>0.5).</p>';
+      $('#dea-heatmap').innerHTML = '<p class="muted">Menos de 2 genes DE (limiares: adj.P&lt;0.05 e |log2FC|&gt;0.5).</p>';
       return;
     }
     const n = S.dp.rnaSampleIds.length;
@@ -299,26 +303,30 @@
     const input = $('#km-genes').value.trim();
     let genes = input ? input.split(/[,\s;]+/).map((g) => g.toUpperCase()).filter(Boolean) : defaultGenes();
     genes = genes.slice(0, 8);
-    const { time, event } = survivalArrays();
-    $('#km-panel').innerHTML = '';
-    S.kmResults = {};
-    const summaries = [];
-    for (const gene of genes) {
-      const er = exprRow(gene);
-      if (!er) { summaries.push(gene + ': sem expressão'); continue; }
-      const km = TALL.survival.analyze(time, event, Array.from(er.values));
-      if (!km.km.length) { summaries.push(gene + ': sem dados'); continue; }
-      S.kmResults[gene] = km;
-      const divId = 'km-' + gene;
-      $('#km-panel').insertAdjacentHTML('beforeend',
-        '<div class="card"><h3>' + gene + '</h3><div id="' + divId + '" class="plot"></div>' +
-        '<p class="muted">Corte: mediana (' + km.medianCut.toFixed(2) + ') · Alto n=' + km.nAlto +
-        ' · Baixo n=' + km.nBaixo + ' · log-rank p=' + km.logRank.p.toExponential(2) + '</p>' +
-        riskTableHtml(km) + '</div>');
-      TALL.charts.km(divId, km, { title: 'KM — ' + gene });
-      summaries.push(gene + ': p=' + km.logRank.p.toExponential(2));
-    }
-    $('#km-sub').textContent = summaries.join(' · ') || 'Nenhum gene válido.';
+    withLoading('Gerando curvas de Kaplan-Meier…', () => {
+      const { time, event } = survivalArrays();
+      $('#km-panel').innerHTML = '';
+      S.kmResults = {};
+      const summaries = [];
+      for (const gene of genes) {
+        const er = exprRow(gene);
+        if (!er) { summaries.push(gene + ': sem expressão'); continue; }
+        const km = TALL.survival.analyze(time, event, Array.from(er.values));
+        if (!km.km.length) { summaries.push(gene + ': sem dados'); continue; }
+        S.kmResults[gene] = km;
+        const divId = 'km-' + gene;
+        $('#km-panel').insertAdjacentHTML('beforeend',
+          '<div class="card"><div class="card-head"><h3>' + gene + '</h3>' +
+          '<button type="button" class="chart-help" data-help="km" aria-label="Explicação deste gráfico" title="Explicação deste gráfico">i</button></div>' +
+          '<div id="' + divId + '" class="plot"></div>' +
+          '<p class="muted">Corte: mediana (' + km.medianCut.toFixed(2) + ') · Alto n=' + km.nAlto +
+          ' · Baixo n=' + km.nBaixo + ' · log-rank ' + TALL.stats.fmtP(km.logRank.p) + '</p>' +
+          riskTableHtml(km) + '</div>');
+        TALL.charts.km(divId, km, { title: 'KM — ' + gene + ' (' + survTypeLabel() + ')' });
+        summaries.push(gene + ': p=' + km.logRank.p.toExponential(2));
+      }
+      $('#km-sub').textContent = summaries.join(' · ') || 'Nenhum gene válido.';
+    });
   }
 
   function defaultGenes() {
@@ -332,6 +340,23 @@
       out.push(...S.top30.map((r) => r.Gene).filter((g) => inExpr.has(g)));
     }
     return Array.from(new Set(out)).slice(0, 10);
+  }
+
+  /* rótulo do endpoint de sobrevida (equivale ao surv_type do Script.R) */
+  function survTypeLabel() {
+    const t = String(S.settings.timeCol || '').toUpperCase();
+    return (t.indexOf('DFS') === 0 || t.indexOf('EFS') === 0)
+      ? 'DFS (Sobrevida Livre de Doença)'
+      : 'OS (Sobrevida Global)';
+  }
+
+  /* executa um trabalho mostrando o loading com o layout do ícone
+     (dá tempo de o navegador pintar o overlay antes do cálculo síncrono) */
+  function withLoading(msg, fn) {
+    TALL.ui.loading(msg);
+    setTimeout(() => {
+      try { fn(); } finally { TALL.ui.endLoading(); }
+    }, 40);
   }
 
   /* tabela de risco (n em risco em tempos selecionados) */
@@ -356,32 +381,34 @@
     if (!S.dp) return TALL.ui.toast('Baixe os dados primeiro.', 'error');
     const input = $('#cox-genes').value.trim();
     const genes = input ? input.split(/[,\s;]+/).map((g) => g.toUpperCase()).filter(Boolean) : defaultGenes();
-    const { time, event } = survivalArrays();
-    const exprMap = {};
-    for (const g of S.dp.expr) exprMap[g.symbol] = g;
+    withLoading('Rodando Cox…', () => {
+      const { time, event } = survivalArrays();
+      const exprMap = {};
+      for (const g of S.dp.expr) exprMap[g.symbol] = g;
 
-    S.coxUni = TALL.cox.univariate(time, event, genes, exprMap);
-    if (!S.coxUni.length) return TALL.ui.toast('Nenhum gene com dados suficientes.', 'error');
+      S.coxUni = TALL.cox.univariate(time, event, genes, exprMap);
+      if (!S.coxUni.length) return TALL.ui.toast('Nenhum gene com dados suficientes.', 'error');
 
-    $('#cox-sub').textContent = S.coxUni.length + ' genes · hazard ratio por 1 DP de expressão (padronizada) · ' +
-      'p<0.05 marcados com *';
-    TALL.charts.forest('#cox-forest', S.coxUni);
-    TALL.ui.renderTable($('#cox-table'),
-      ['Gene', 'HR', 'IC95% inf', 'IC95% sup', 'p', 'signif'],
-      S.coxUni.map((r) => [r.Gene, r.HR, r.HR_lower, r.HR_upper, r.p_value, r.p_signif]));
+      $('#cox-sub').textContent = S.coxUni.length + ' genes · hazard ratio por 1 DP de expressão (padronizada) · ' +
+        'p<0.05 marcados com *';
+      TALL.charts.forest('#cox-forest', S.coxUni);
+      TALL.ui.renderTable($('#cox-table'),
+        ['Gene', 'HR', 'IC95% inf', 'IC95% sup', 'p', 'signif'],
+        S.coxUni.map((r) => [r.Gene, r.HR, r.HR_lower, r.HR_upper, r.p_value, r.p_signif]));
 
-    // multivariado com genes p<0.1 (limite de 10 covariáveis)
-    const cand = S.coxUni.filter((r) => r.p_value < 0.1).map((r) => r.Gene).slice(0, 10);
-    if (cand.length >= 2) {
-      const fit = TALL.cox.multivariate(time, event, cand, exprMap);
-      if (fit) {
-        S.coxMulti = fit;
-        TALL.ui.renderTable($('#cox-multi-table'),
-          ['Covariável', 'HR', 'IC95%', 'p'],
-          fit.names.map((nm, j) => [nm, fit.HR[j].toFixed(3),
-            fit.hrLower[j].toFixed(3) + '–' + fit.hrUpper[j].toFixed(3), fit.p[j].toExponential(2)]));
+      // multivariado com genes p<0.1 (limite de 10 covariáveis)
+      const cand = S.coxUni.filter((r) => r.p_value < 0.1).map((r) => r.Gene).slice(0, 10);
+      if (cand.length >= 2) {
+        const fit = TALL.cox.multivariate(time, event, cand, exprMap);
+        if (fit) {
+          S.coxMulti = fit;
+          TALL.ui.renderTable($('#cox-multi-table'),
+            ['Covariável', 'HR', 'IC95%', 'p'],
+            fit.names.map((nm, j) => [nm, fit.HR[j].toFixed(3),
+              fit.hrLower[j].toFixed(3) + '–' + fit.hrUpper[j].toFixed(3), fit.p[j].toExponential(2)]));
+        }
       }
-    }
+    });
   }
 
   /* ============================================================
@@ -446,15 +473,23 @@
       navigator.serviceWorker.register('sw.js').catch((e) => console.warn('SW falhou:', e));
     }
 
-    // botão instalar
+    // botão instalar (PWA) — oculto quando o app já roda em modo standalone
     let deferredPrompt = null;
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+      $('#install-btn').hidden = true;
+    }
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
       $('#install-btn').hidden = false;
       $('#install-btn').addEventListener('click', () => {
+        if (!deferredPrompt) return;
         deferredPrompt.prompt();
       });
+    });
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      $('#install-btn').hidden = true;
     });
 
     datapackControls('#dash-datapack');
@@ -469,7 +504,9 @@
     wireOnShow();
 
     // carrega cache
+    TALL.ui.loading('Carregando dados…');
     S.dp = await TALL.datapack.loadFromCache();
+    TALL.ui.endLoading();
     if (S.dp) {
       datapackControls('#dash-datapack');
       renderDashboard();

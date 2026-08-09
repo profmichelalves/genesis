@@ -1,4 +1,4 @@
-# Plano — PWA "TARGET ALL Explorer"
+# Plano — PWA "Genesis"
 
 Aplicação **PWA responsiva em HTML/CSS/JS** que baixa o estudo `all_phase2_target_2018_pub`
 (TARGET ALL — Leucemia Linfoide Aguda pediátrica, cBioPortal) **diretamente no navegador**

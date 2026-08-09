@@ -1,8 +1,8 @@
-/* Service Worker — TARGET ALL Explorer
+/* Service Worker — Genesis
    Estratégia: cache-first para o app shell (mesmo domínio) e
    stale-while-revalidate para o Plotly CDN. Os dados de estudo ficam
    em IndexedDB (gerenciado pela aplicação), não aqui. */
-const CACHE = 'tall-explorer-v5';
+const CACHE = 'genesis-v1';
 const APP_SHELL = [
   './',
   './index.html',
@@ -19,6 +19,7 @@ const APP_SHELL = [
   './js/charts.js',
   './js/export.js',
   './js/ui.js',
+  './js/help.js',
   './js/main.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -39,7 +40,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-const RUNTIME_CACHE = 'tall-explorer-runtime-v1';
+const RUNTIME_CACHE = 'genesis-runtime-v1';
 const CDN_PREFIXES = [
   'https://cdn.plot.ly/'
 ];

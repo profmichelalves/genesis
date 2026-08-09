@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>TARGET ALL Explorer</title>
-  <meta name="description" content="PWA de análise do estudo TARGET ALL (Leucemia Linfoide Aguda) via cBioPortal: Top 30 mutados, expressão diferencial, Kaplan-Meier e Cox." />
+  <title>Genesis — Análise TARGET ALL</title>
+  <meta name="description" content="Genesis — PWA de análise do estudo TARGET ALL (Leucemia Linfoide Aguda) via cBioPortal: Top 30 mutados, expressão diferencial, Kaplan-Meier e Cox." />
   <meta name="theme-color" content="#0c295c" />
   <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
@@ -18,7 +18,7 @@
     <div class="header-inner">
       <div class="brand">
         <img src="icons/icon-192.png" alt="Logo" />
-        <h1>TARGET ALL Explorer<small>LLA pediátrica — TARGET ALL (cBioPortal)</small></h1>
+        <h1>Genesis<small>Análise do TARGET ALL — LLA pediátrica (cBioPortal)</small></h1>
       </div>
       <div class="header-spacer"></div>
       <button id="install-btn" class="icon-btn" hidden>
@@ -51,7 +51,7 @@
       </div>
       <div class="grid cards">
         <div class="card">
-          <h3>Distribuição de FIRST_EVENT</h3>
+          <div class="card-head"><h3>Distribuição de FIRST_EVENT</h3><button type="button" class="chart-help" data-help="first-event" aria-label="Explicação deste gráfico" title="Explicação deste gráfico">i</button></div>
           <div id="dash-first-event" class="plot sm"></div>
         </div>
       </div>
@@ -81,6 +81,7 @@
         <div class="row" style="margin-bottom:8px">
           <div class="field auto"><label>&nbsp;</label><button class="btn primary" id="top30-run">Gerar / Atualizar</button></div>
           <div class="field auto"><label>&nbsp;</label><button class="btn" id="top30-csv">Exportar CSV</button></div>
+          <div class="field auto"><label>&nbsp;</label><button type="button" class="chart-help" data-help="top30" aria-label="Explicação deste gráfico" title="Explicação deste gráfico">i</button></div>
         </div>
         <div id="top30-chart" class="plot tall"></div>
       </div>
@@ -102,10 +103,10 @@
         <p class="muted" id="dea-summary"></p>
       </div>
       <div class="grid cards">
-        <div class="card"><h3>Volcano plot</h3><div id="dea-volcano" class="plot"></div></div>
-        <div class="card"><h3>MA plot</h3><div id="dea-ma" class="plot"></div></div>
+        <div class="card"><div class="card-head"><h3>Volcano plot</h3><button type="button" class="chart-help" data-help="volcano" aria-label="Explicação deste gráfico" title="Explicação deste gráfico">i</button></div><div id="dea-volcano" class="plot"></div></div>
+        <div class="card"><div class="card-head"><h3>MA plot</h3><button type="button" class="chart-help" data-help="ma" aria-label="Explicação deste gráfico" title="Explicação deste gráfico">i</button></div><div id="dea-ma" class="plot"></div></div>
       </div>
-      <div class="card"><h3>Heatmap — Top DEGs</h3><div id="dea-heatmap" class="plot tall"></div></div>
+      <div class="card"><div class="card-head"><h3>Heatmap — Top DEGs</h3><button type="button" class="chart-help" data-help="heatmap" aria-label="Explicação deste gráfico" title="Explicação deste gráfico">i</button></div><div id="dea-heatmap" class="plot tall"></div></div>
       <div class="card"><h3>Tabela de resultados</h3><div class="table-wrap"><table class="data" id="dea-table"></table></div></div>
     </section>
 
@@ -135,7 +136,7 @@
         </div>
         <p class="muted" id="cox-summary"></p>
       </div>
-      <div class="card"><h3>Forest plot — Cox univariado</h3><div id="cox-forest" class="plot"></div></div>
+      <div class="card"><div class="card-head"><h3>Forest plot — Cox univariado</h3><button type="button" class="chart-help" data-help="forest" aria-label="Explicação deste gráfico" title="Explicação deste gráfico">i</button></div><div id="cox-forest" class="plot"></div></div>
       <div class="card"><h3>Cox multivariado (genes p &lt; 0.1)</h3><div class="table-wrap"><table class="data" id="cox-multi-table"></table></div></div>
       <div class="card"><h3>Cox univariado</h3><div class="table-wrap"><table class="data" id="cox-table"></table></div></div>
     </section>
@@ -160,6 +161,7 @@
   <script src="js/charts.js"></script>
   <script src="js/export.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/help.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

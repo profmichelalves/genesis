@@ -1,4 +1,4 @@
-/* TARGET ALL Explorer — Expressão diferencial (estilo-limma) em JS.
+/* Genesis — Expressão diferencial (estilo-limma) em JS.
    Para cada gene: β = diferença de médias entre grupos, variância agrupada (df = n-2),
    depois moderação bayesiana empírica (Smyth, 2004): estima-se d0 (graus de liberdade
    do prior) resolvendo var(log(s2)) = trigamma(df/2) + trigamma(d0/2) por bisseção,
@@ -42,7 +42,8 @@
   }
 
   /* Entrada: rows = [{gene, values:Float32Array/Array, entrez?}] alinhado a `groups`.
-     groups: array 0/1 (1 = grupo de interesse, ex.: Relapse).
+     groups: array 0/1 (1 = grupo de interesse, ex.: Relapse). Amostras com grupo
+     fora de {0,1} (ex.: -1) são EXCLUÍDAS, como o keep_dea do Script.R (Relapse/None).
      transform: 'none' | 'log2' (aplica log2(x+1) antes de tudo).
      Retorna objeto { table: rows ordenadas, summary, n0, n1 }. */
   D.run = function (rows, groups, opts) {
@@ -50,10 +51,13 @@
     const transform = opts.transform || 'none';
     const n = rows.length;
     const g1 = new Set();
-    for (let i = 0; i < groups.length; i++) if (groups[i] === 1) g1.add(i);
-    const n0 = groups.length - g1.size;
-    const n1 = g1.size;
+    let n0 = 0, n1 = 0;
+    for (let i = 0; i < groups.length; i++) {
+      if (groups[i] === 1) { g1.add(i); n1++; }
+      else if (groups[i] === 0) n0++;
+    }
     const df = n0 + n1 - 2;
+    const inGroup = (i) => (groups[i] === 0 || groups[i] === 1);
 
     const raw = [];
     for (let gi = 0; gi < n; gi++) {
@@ -63,6 +67,7 @@
       for (let i = 0; i < vals.length; i++) {
         let x = vals[i];
         if (!isFinite(x) || x === null) continue;
+        if (!inGroup(i)) continue;
         if (transform === 'log2') x = Math.log2(x + 1);
         mAll += x;
         if (g1.has(i)) { m1 += x; c1++; } else { m0 += x; c0++; }
@@ -73,6 +78,7 @@
       for (let i = 0; i < vals.length; i++) {
         let x = vals[i];
         if (!isFinite(x) || x === null) continue;
+        if (!inGroup(i)) continue;
         if (transform === 'log2') x = Math.log2(x + 1);
         if (g1.has(i)) { const d = x - mean1; ss1 += d * d; } else { const d = x - mean0; ss0 += d * d; }
       }

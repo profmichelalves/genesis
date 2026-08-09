@@ -1,7 +1,7 @@
 {
-  "name": "TARGET ALL Explorer",
-  "short_name": "TALL Explorer",
-  "description": "PWA de análise do estudo TARGET ALL (Leucemia Linfoide Aguda pediátrica) via cBioPortal: Top 30 mutados, expressão diferencial, Kaplan-Meier e Cox.",
+  "name": "Genesis — Análise TARGET ALL",
+  "short_name": "Genesis",
+  "description": "Genesis — PWA de análise do estudo TARGET ALL (Leucemia Linfoide Aguda pediátrica) via cBioPortal: Top 30 mutados, expressão diferencial, Kaplan-Meier e Cox.",
   "lang": "pt-BR",
   "start_url": "./index.html",
   "scope": "./",

@@ -1,0 +1,178 @@
+/* Genesis — Explicações técnicas de cada gráfico (ícone "i" → modal).
+   Linguagem para médicos e cientistas de dados: descreve o método,
+   os eixos, os elementos visuais e como interpretar os resultados. */
+(function () {
+  'use strict';
+  const H = {};
+  const h4 = (t) => '<h4>' + t + '</h4>';
+  const li = (t) => '<li>' + t + '</li>';
+  const ul = (...items) => '<ul>' + items.map(li).join('') + '</ul>';
+  const b = (t) => '<b>' + t + '</b>';
+
+  /* ---------- Dashboard: distribuição de FIRST_EVENT ---------- */
+  H['first-event'] = {
+    title: 'Distribuição de FIRST_EVENT',
+    html:
+      '<p>O campo clínico <code>FIRST_EVENT</code> registra o <b>primeiro evento relevante</b> ' +
+      'após o diagnóstico de cada paciente do TARGET ALL. Nesta plataforma, as categorias ' +
+      'informativas para as análises são <b>Relapse</b> (recidiva da leucemia) e <b>None</b> ' +
+      '(sem evento registrado, i.e., remissão contínua até o último acompanhamento).</p>' +
+      h4('Eixos') +
+      ul(b('Eixo X') + ' — categorias de <code>FIRST_EVENT</code>.',
+         b('Eixo Y') + ' — número de pacientes em cada categoria.') +
+      h4('O que observar') +
+      ul('Frequências absolutas mostram o <b>balanço da coorte</b> entre pacientes que ' +
+         'recidivaram e os que permaneceram sem evento.',
+         'Este campo define os grupos da análise de <b>expressão diferencial</b> (Relapse vs None).',
+         'É uma estatística descritiva do desenho do estudo — não envolve teste de hipóteses.')
+  };
+
+  /* ---------- Top 30 ---------- */
+  H['top30'] = {
+    title: 'Top 30 genes mais mutados',
+    html:
+      '<p>Barras horizontais com os <b>30 genes mais frequentemente alterados</b> por mutação ' +
+      '(SNV/indel, dados de exoma — WES) na coorte. Uma amostra é contada quando apresenta ' +
+      'mutação não sinônima no gene.</p>' +
+      h4('Eixos') +
+      ul(b('Eixo X') + ' — número de amostras com mutação no gene.',
+         b('Eixo Y') + ' — gene (ordenado por frequência decrescente).') +
+      h4('Interpretação') +
+      ul('A frequência relativa é <code>N / total de amostras sequenciadas</code> (exibida na tabela ao lado).',
+         'Genes no topo são <b>candidatos a genes motores</b> (drivers) e são reaproveitados no ' +
+         'painel de Kaplan-Meier e Cox quando também expressos.',
+         'Não há teste estatístico aqui — é ranking por frequência bruta.')
+  };
+
+  /* ---------- Volcano ---------- */
+  H['volcano'] = {
+    title: 'Volcano — Expressão diferencial (Relapse vs None)',
+    html:
+      '<p>Cada ponto é um gene testado para <b>expressão diferencial</b> entre pacientes com ' +
+      'recidiva (<b>Relapse</b>) e sem evento (<b>None</b>). O teste segue o estilo limma: ' +
+      'teste t com variância agrupada e <b>moderação bayesiana empírica</b> ' +
+      '(Smyth, 2004) — o df do prior (d0) é estimado por momentos e o erro padrão de cada gene ' +
+      'é encolhido em direção ao prior. P-values são corrigidos por <b>FDR de Benjamini–Hochberg</b>.</p>' +
+      h4('Eixos') +
+      ul(b('Eixo X') + ' — <code>log2FC</code>: diferença da média de expressão (escala log2) ' +
+         'entre Relapse e None. Valor positivo = gene mais expresso no grupo Relapse; ' +
+         'negativo = mais expresso no grupo None.',
+         b('Eixo Y') + ' — <code>-log10(adj. p)</code>: transformação do p-value ajustado; ' +
+         'quanto mais alto, mais significativo (adj. p = 0.01 aparece em 2; 0.05 em ~1.3).') +
+      h4('Cores') +
+      ul(b('<span style="color:#d64545">Vermelho</span>') + ' — Upregulado no grupo Relapse.',
+         b('<span style="color:#2d6cdf">Azul</span>') + ' — Downregulado no grupo Relapse.',
+         b('<span style="color:#9aa3af">Cinza</span>') + ' — Sem diferença estatisticamente relevante (NS).') +
+      h4('Limiares') +
+      ul(b('DE moderado:') + ' adj. p &lt; 0.05 e |log2FC| &gt; 0.5.',
+         b('DE de alta evidência:') + ' adj. p &lt; 0.01 e |log2FC| &gt; 1.0.') +
+      h4('Como ler') +
+      ul('Pontos <b>à esquerda</b> (log2FC &lt; 0) e <b>acima</b> do corte de significância: ' +
+         'genes reprimidos nas recidivas.',
+         'Pontos <b>à direita</b> e acima do corte: genes superexpressos nas recidivas.',
+         'Distribuição assimétrica das caudas indica uma assinatura transcricional associada à recidiva.')
+  };
+
+  /* ---------- MA plot ---------- */
+  H['ma'] = {
+    title: 'MA plot — Intensidade vs razão',
+    html:
+      '<p>Diagnóstico padrão de análises de microarranjo/RNA-seq: relaciona a <b>magnitude da ' +
+      'expressão</b> (A) à <b>magnitude da mudança</b> (M). Cada ponto é um gene, com as mesmas ' +
+      'cores e significância do volcano.</p>' +
+      h4('Eixos') +
+      ul(b('A (média)') + ' — média de expressão do gene nas amostras Relapse e None juntas.',
+         b('M (log2FC)') + ' — mudança de expressão Relapse vs None, em escala log2.') +
+      h4('Interpretação') +
+      ul('Sob a hipótese nula, os pontos distribuem-se <b>simetricamente em torno de M = 0</b>.',
+         'Um leque que cresce em A baixo sugere <b>viés de intensidade</b> (fold-change inflado ' +
+         'em genes de baixa expressão) — um aviso sobre robustez, não um resultado biológico.',
+         'Um gene com |log2FC| alto e A alto é uma alteração forte e tecnicamente confiável; ' +
+         '|log2FC| alto com A baixo merece verificação independente.')
+  };
+
+  /* ---------- Heatmap ---------- */
+  H['heatmap'] = {
+    title: 'Heatmap — Top genes diferencialmente expressos',
+    html:
+      '<p>Visualização conjunta da expressão dos <b>principais genes DE</b> (top 40 por adj. p) ' +
+      'em todas as amostras RNA. A expressão de cada gene é convertida em <b>z-score</b> ' +
+      '(desvios padrão em relação à própria média do gene), o que permite comparar padrões ' +
+      'relativos entre genes de intensidades diferentes.</p>' +
+      h4('Linhas e colunas') +
+      ul('<b>Linhas</b> — genes DE, ordenados por <b>clusterização hierárquica</b> (genes com ' +
+         'perfil de expressão semelhante ficam próximos).',
+         '<b>Colunas</b> — amostras RNA, ordenadas primeiro pelo <b>grupo clínico</b> ' +
+         '(Relapse, depois None, depois demais) e, dentro de cada grupo, por clusterização.') +
+      h4('Cores') +
+      ul(b('<span style="color:#2b4bd8">Azul</span>') + ' — expressão abaixo da média do gene (z &lt; 0).',
+         '<b>Branco</b> — próxima da média (z ≈ 0).',
+         b('<span style="color:#c23b3b">Vermelho</span>') + ' — acima da média (z &gt; 0).') +
+      h4('Interpretação') +
+      ul('Blocos verticais de cor consistente nas colunas Relapse vs None indicam <b>módulos ' +
+         'gênicos coordenados</b> com a recidiva.',
+         'Clusters de genes com padrão oposto (uns vermelhos onde outros azuis) sugerem ' +
+         'assinaturas antagônicas — útil para gerar hipóteses, não conclusões causais.')
+  };
+
+  /* ---------- Kaplan-Meier ---------- */
+  H['km'] = {
+    title: 'Kaplan-Meier — Sobrevida por expressão do gene',
+    html:
+      '<p>Curvas de sobrevida pelo <b>estimador produto-limite de Kaplan-Meier</b> para os grupos ' +
+      '<b>Alto</b> e <b>Baixo</b> expressão do gene (dicotomização pela <b>mediana</b> das amostras ' +
+      'com sobrevida e expressão válidas). Endpoint: sobrevida global (OS) ou livre de doença ' +
+      '(DFS), conforme o estudo.</p>' +
+      h4('Elementos da curva') +
+      ul('<b>Degraus</b> — momentos em que ocorrem eventos (óbitos/recidivas).',
+         '<b>Tiques transversais</b> — <b>censuras</b>: pacientes retirados do seguimento sem ' +
+         'evento (perdas ou fim do acompanhamento). A curva cai apenas em eventos reais.',
+         '<b>Faixa colorida</b> — intervalo de confiança de 95% da sobrevida, construído na ' +
+         'transformação <b>log-log</b> (conf.type = "log" do <code>survfit</code>), restrito a [0,1].') +
+      h4('Tabela de risco') +
+      ul('Mostra o <b>n em risco</b> (pacientes ainda em acompanhamento) em tempos fixos ' +
+         '(0, 12, 24… meses). Conforme o n cai, as curvas tornam-se menos confiáveis — ' +
+         'a tabela contextualiza as caudas das curvas.') +
+      h4('Teste log-rank') +
+      ul('O <b>p</b> anotado vem do teste log-rank (estatística χ², 1 grau de liberdade para ' +
+         'dois grupos), que compara as curvas ao longo de todo o seguimento: a hipótese nula é a ' +
+         'ausência de diferença entre os grupos.') +
+      h4('Cautelas') +
+      ul('A dicotomização pela mediana é uma <b>simplificação</b> — perde a informação da ' +
+         'relação contínua gene-sobrevida.',
+         'Com muitos genes testados, o p nominal <b>não é ajustado para múltiplas ' +
+         'comparações</b> — p &lt; 0.05 deve ser encarado como evidência exploratória.')
+  };
+
+  /* ---------- Forest plot (Cox) ---------- */
+  H['forest'] = {
+    title: 'Forest plot — Cox univariado',
+    html:
+      '<p><b>Regressão de Cox de riscos proporcionais</b> univariada (1 gene por modelo) do tempo ' +
+      'até o evento. A expressão do gene é <b>padronizada</b> (z-score) nas amostras do modelo, e o ' +
+      'coeficiente é estimado por máxima verossimilhança via Newton–Raphson com aproximação de ' +
+      '<b>Efron</b> para empates.</p>' +
+      h4('Leitura') +
+      ul('Cada ponto é o <b>hazard ratio (HR)</b> = exp(β): o efeito de um aumento de ' +
+         '<b>1 desvio padrão</b> na expressão do gene sobre o risco instantâneo do evento.',
+         '<b>HR &gt; 1</b> — maior expressão associa-se a maior risco (pior prognóstico).',
+         '<b>HR &lt; 1</b> — maior expressão associa-se a menor risco (proteção).',
+         '<b>Barras</b> — intervalo de confiança de 95% de Wald (exp(β ± 1.96·se)).',
+         '<b>Linha tracejada em HR = 1</b> — ponto de efeito nulo; genes cujo IC cruza a ' +
+         'linha não têm evidência de associação.') +
+      h4('Cores') +
+      ul(b('<span style="color:#d64545">Vermelho</span>') + ' — p &lt; 0.05 (associação nominalmente ' +
+         'significativa).',
+         b('<span style="color:#9aa3af">Cinza</span>') + ' — p ≥ 0.05.') +
+      h4('Cautelas') +
+      ul('Modelo <b>univariado</b> — não ajusta para covariáveis; associações podem refletir ' +
+         'confundimento.',
+         'Assume-se <b>proporcionalidade dos riscos</b> (efeito constante no tempo).',
+         'Múltiplos genes testados — aplicar correção para comparações múltiplas antes de ' +
+         'conclusões.')
+  };
+
+  window.TALL = window.TALL || {};
+  window.TALL.help = H;
+  if (window.TALL.ui) window.TALL.ui.setHelp(H);
+})();

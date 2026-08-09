@@ -1,4 +1,4 @@
-/* TARGET ALL Explorer — helpers numéricos e distribuições de probabilidade.
+/* Genesis — helpers numéricos e distribuições de probabilidade.
    Implementações seguem Numerical Recipes (betacf/betai, gser/gcf) e
    aproximações clássicas (Lanczos para lgamma, A&S 7.1.26 para erf). */
 (function () {
@@ -198,6 +198,13 @@
     let s = 0;
     for (let i = 0; i < a.length; i++) s += Math.exp(a[i] - m);
     return m + Math.log(s);
+  };
+
+  /* formatação de p-valor no estilo do R (survminer/format.pval) */
+  S.fmtP = function (p) {
+    if (!isFinite(p)) return 'p = NA';
+    if (p < 0.0001) return 'p < 0.0001';
+    return 'p = ' + parseFloat(p.toPrecision(3));
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = S;

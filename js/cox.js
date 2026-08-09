@@ -1,4 +1,4 @@
-/* TARGET ALL Explorer — Regressão de Cox de riscos proporcionais.
+/* Genesis — Regressão de Cox de riscos proporcionais.
    MLE via Newton–Raphson com aproximação de Efron para empates.
    Preditor de interesse é tipicamente pré-escalonado (padronizado), como no Script.R.
    Implementa: gradiente U, matriz de informação observada I (positiva definida),
@@ -235,19 +235,24 @@
 
   /* Conveniência: univariado para um vetor de genes.
      time/event/exprs: exprs = {gene: Float32Array}, amostras alinhadas.
-     Escalona cada gene (como no Script.R). Retorna array de resultados. */
+     Como no Script.R (cox_df_scaled): filtra amostras com sobrevida válida
+     (tempo > 0) e padroniza a expressão sobre essas amostras do modelo. */
   CX.univariate = function (time, event, genes, exprRows) {
     const out = [];
     for (const gene of genes) {
       const row = exprRows[gene];
       if (!row) continue;
-      const scaled = st.scale(Array.from(row.values));
       const rows = [];
       for (let i = 0; i < time.length; i++) {
-        if (!isFinite(time[i]) || time[i] === null || !isFinite(scaled[i])) continue;
-        rows.push({ time: time[i], event: event[i] ? 1 : 0, covariates: [scaled[i]] });
+        if (!isFinite(time[i]) || time[i] === null) continue;
+        if (time[i] <= 0) continue;
+        if (!isFinite(row.values[i])) continue;
+        rows.push({ time: time[i], event: event[i] ? 1 : 0, covariates: [row.values[i]] });
       }
       if (rows.length < 5) continue;
+      const m = st.mean(rows.map((r) => r.covariates[0]));
+      const s = st.sd(rows.map((r) => r.covariates[0]));
+      for (const r of rows) r.covariates[0] = s > 0 ? (r.covariates[0] - m) / s : 0;
       const fit = CX.coxph(rows, [gene]);
       if (!fit) continue;
       out.push({
@@ -268,6 +273,7 @@
     const rows = [];
     for (let i = 0; i < time.length; i++) {
       if (!isFinite(time[i]) || time[i] === null) continue;
+      if (time[i] <= 0) continue;
       const covs = [];
       let ok = true;
       for (const g of genes) {

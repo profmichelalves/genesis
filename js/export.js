@@ -1,4 +1,4 @@
-/* TARGET ALL Explorer — exportações: CSV, imagens (Plotly) e relatório consolidado. */
+/* Genesis — exportações: CSV, imagens (Plotly) e relatório consolidado. */
 (function () {
   'use strict';
   const E = {};

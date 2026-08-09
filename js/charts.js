@@ -1,4 +1,4 @@
-/* TARGET ALL Explorer — wrappers Plotly para os 6 blocos do Script.R. */
+/* Genesis — wrappers Plotly para os 6 blocos do Script.R. */
 (function () {
   'use strict';
   const C = {};
@@ -16,12 +16,51 @@
       grid: cssVar('--border', '#e5e7eb')
     };
   }
-  const CFG = { displaylogo: false, responsive: true };
+  const CFG = { displaylogo: false, responsive: true, useResizeHandler: window.innerWidth < 768 };
+
+  /* Em telas grandes o Plotly já redimensiona; o useResizeHandler é só para
+     evitar o aviso de resize-loop em painéis escondidos (display:none). */
+  function isMobile() { return window.innerWidth < 768; }
+  let lastResizeW = window.innerWidth;
+  function syncResizeHandler() {
+    const use = isMobile();
+    if (CFG.useResizeHandler === use) return;
+    CFG.useResizeHandler = use;
+    document.querySelectorAll('.js-plotly-plot').forEach((el) => {
+      try { Plotly.relayout(el, { autosize: true }); Plotly.Plots.resize(el); } catch (e) {}
+    });
+  }
+  window.addEventListener('resize', () => {
+    if (lastResizeW === window.innerWidth) return;
+    lastResizeW = window.innerWidth;
+    syncResizeHandler();
+  });
 
   /* Plotly.getGraphDiv faz getElementById(id) — id com '#' nunca casa.
      Converte seletor '#x' → elemento DOM. */
   function resolve(sel) {
     return typeof sel === 'string' && sel.charAt(0) === '#' ? document.querySelector(sel) : sel;
+  }
+
+  /* desenha/atualiza um gráfico garantindo largura 100% (evita scroll horizontal
+     quando um plot nasce com o painel oculto, display:none → 0×0) */
+  function render(div, data, layout, cfg) {
+    const el = resolve(div);
+    if (!el) return;
+    el.style.width = '100%';
+    Plotly.react(el, data, layout, Object.assign({}, CFG, cfg || {}));
+    requestAnimationFrame(() => {
+      try { Plotly.Plots.resize(el); } catch (e) {}
+    });
+  }
+  C.render = render;
+
+  /* '#rrggbb' → 'rgba(r,g,b,a)' para fills translúcidos */
+  function hexToRgba(hex, alpha) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return hex;
+    const v = parseInt(m[1], 16);
+    return 'rgba(' + ((v >> 16) & 255) + ',' + ((v >> 8) & 255) + ',' + (v & 255) + ',' + alpha + ')';
   }
   const LAYOUT_BASE = () => {
     const t = theme();
@@ -50,7 +89,7 @@
       yaxis: { automargin: true, tickfont: { size: 11 } },
       bargap: 0.35
     });
-    Plotly.react(resolve(div), data, layout, CFG);
+    render(div, data, layout);
   };
 
   /* Bloco 2 — Volcano plot (DEA) */
@@ -74,7 +113,7 @@
       yaxis: { title: '-log10(adj. p)', gridcolor: theme().grid },
       shapes: [{ type: 'line', x0: 0, x1: 0, y0: 0, y1: 1, xref: 'x', yref: 'paper', line: { color: theme().grid, dash: 'dot' } }]
     });
-    Plotly.react(resolve(div), data, layout, CFG);
+    render(div, data, layout);
   };
 
   /* Bloco 3 — MA plot */
@@ -94,7 +133,7 @@
       xaxis: { title: 'Média de expressão (A)', gridcolor: theme().grid },
       yaxis: { title: 'log2FC (M)', gridcolor: theme().grid }
     });
-    Plotly.react(resolve(div), data, layout, CFG);
+    render(div, data, layout);
   };
 
   /* Bloco 4 — Heatmap (z-score, ordenado por cluster e por grupo clínico) */
@@ -116,19 +155,35 @@
       zmid: 0, showscale: true,
       colorbar: { title: 'z-score', titleside: 'right' }
     };
-    Plotly.react(resolve(div), [trace], layout, CFG);
+    render(div, [trace], layout);
   };
 
-  /* Bloco 5 — Kaplan-Meier com tabela de risco.
-     result: { km: [{name,n,times,surv,nRisk,censor}], logRank: {p} } */
+  /* Bloco 5 — Kaplan-Meier com IC 95% (log-log), censuras e tabela de risco.
+     result: { km: [{name,n,times,surv,ciLo,ciHi,nRisk,censor}], logRank: {p} }
+     Ordem/cores idênticas ao ggsurvplot do Script.R: Alto=#c0392b, Baixo=#2980b9. */
   C.km = function (div, result, meta) {
     const t = theme();
-    const palette = ['#c23b3b', '#2d6cdf', '#2f9e6e', '#b07a2e', '#7b4cc2'];
+    const st = window.TALL.stats || {};
+    const palette = ['#c0392b', '#2980b9', '#2f9e6e', '#b07a2e', '#7b4cc2'];
     const groups = result.km;
     const logRank = result.logRank;
     const traces = [];
     groups.forEach((g, i) => {
       const color = palette[i % palette.length];
+      const ciFill = hexToRgba(color, 0.18);
+      if (g.ciLo && g.ciHi) {
+        traces.push({
+          type: 'scatter', mode: 'lines',
+          x: g.times, y: g.ciLo,
+          line: { width: 0, color: 'rgba(0,0,0,0)' }, showlegend: false, hoverinfo: 'skip'
+        });
+        traces.push({
+          type: 'scatter', mode: 'lines',
+          x: g.times, y: g.ciHi,
+          line: { width: 0, color: 'rgba(0,0,0,0)' },
+          fill: 'tonexty', fillcolor: ciFill, showlegend: false, hoverinfo: 'skip'
+        });
+      }
       traces.push({
         type: 'scatter', mode: 'lines', name: g.name + ' (n=' + g.n + ')',
         x: g.times, y: g.surv,
@@ -141,7 +196,7 @@
         traces.push({
           type: 'scatter', mode: 'markers', name: g.name + ' censura',
           x: cTimes, y: cSurv,
-          marker: { symbol: 'line-ns', size: 7, color: color }, showlegend: false,
+          marker: { symbol: 'line-ns', size: 9, color: color, opacity: 0.85 }, showlegend: false,
           hoverinfo: 'skip'
         });
       }
@@ -156,12 +211,12 @@
     if (logRank) {
       layout.annotations.push({
         x: 0.98, y: 0.95, xref: 'paper', yref: 'paper', xanchor: 'right',
-        text: 'p = ' + logRank.p.toExponential(2),
+        text: (st.fmtP || ((p) => 'p = ' + p.toExponential(2)))(logRank.p),
         showarrow: false, font: { size: 14, color: t.text },
         bgcolor: 'rgba(255,255,255,0.55)'
       });
     }
-    Plotly.react(resolve(div), traces, layout, CFG);
+    render(div, traces, layout);
   };
 
   /* Bloco 6 — Forest plot (Cox univariado: {Gene, HR, HR_lower, HR_upper, p_value}) */
@@ -188,7 +243,7 @@
       shapes: [{ type: 'line', x0: 1, x1: 1, y0: 0, y1: 1, xref: 'x', yref: 'paper', line: { color: '#c23b3b', dash: 'dot' } }],
       height: Math.max(320, items.length * 22)
     });
-    Plotly.react(resolve(div), [data], layout, CFG);
+    render(div, [data], layout);
   };
 
   C.theme = theme;

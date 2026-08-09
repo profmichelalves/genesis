@@ -1,4 +1,4 @@
-/* TARGET ALL Explorer — Sobrevida: estimador de Kaplan-Meier (produto-limite),
+/* Genesis — Sobrevida: estimador de Kaplan-Meier (produto-limite),
    teste log-rank (estatística χ²) e tabela de risco. */
 (function () {
   'use strict';
@@ -9,11 +9,17 @@
 
   /* km por grupo.
      time/event: arrays numéricos; group: array de strings/labels.
-     Retorna array de grupos: {name, n, times[], surv[], nRisk[], censor[], nEvents, nCensor} */
+     Os grupos são ordenados alfabeticamente — como os níveis de fator do R
+     ('Alto' < 'Baixo'), garantindo a mesma ordem/cores do ggsurvplot.
+     Retorna array de grupos: {name, n, times[], surv[], nRisk[], censor[],
+     ciLo[], ciHi[], nEvents, nCensor} — IC do tipo log-log (default de
+     survfit()/ggsurvplot(), conf.int=TRUE do Script.R). */
   SV.kmByGroup = function (time, event, group) {
-    const labels = Array.from(new Set(group));
+    const labels = Array.from(new Set(group)).sort();
     const per = {};
-    labels.forEach((l) => { per[l] = { name: l, n: 0, times: [], surv: [], nRisk: [], censor: [], nEvents: 0, nCensor: 0, obs: [] }; });
+    labels.forEach((l) => {
+      per[l] = { name: l, n: 0, times: [], surv: [], nRisk: [], censor: [], ciLo: [], ciHi: [], nEvents: 0, nCensor: 0, obs: [] };
+    });
 
     for (let i = 0; i < time.length; i++) {
       if (!isFinite(time[i]) || time[i] === null) continue;
@@ -26,10 +32,13 @@
       const obs = per[l].obs.slice().sort((a, b) => a.t - b.t);
       let nRisk = obs.length;
       let surv = 1;
+      let gVar = 0; // variância de Greenwood para log(-log S)
       per[l].times.push(0);
       per[l].surv.push(1);
       per[l].nRisk.push(nRisk);
       per[l].censor.push(0);
+      per[l].ciLo.push(1);
+      per[l].ciHi.push(1);
       let i = 0;
       while (i < obs.length) {
         const t = obs[i].t;
@@ -41,6 +50,7 @@
         if (d > 0) {
           surv *= (1 - d / nRisk);
           per[l].nEvents += d;
+          gVar += d / (nRisk * (nRisk - d));
         } else {
           per[l].nCensor += c;
         }
@@ -49,6 +59,16 @@
         per[l].censor.push(c);
         nRisk -= (d + c);
         per[l].nRisk.push(nRisk);
+        // IC log-log (conf.type="log" do R): theta = log(-log S); se = sqrt(gVar)/|theta|
+        let lo = surv, hi = surv;
+        const theta = Math.log(-Math.log(surv));
+        if (isFinite(theta) && theta !== 0 && isFinite(gVar) && gVar > 0) {
+          const se = Math.sqrt(gVar) / Math.abs(theta);
+          lo = Math.max(0, Math.pow(surv, Math.exp(1.959964 * se)));
+          hi = Math.min(1, Math.pow(surv, Math.exp(-1.959964 * se)));
+        }
+        per[l].ciLo.push(lo);
+        per[l].ciHi.push(hi);
       }
     });
     return labels.map((l) => per[l]);
@@ -97,17 +117,21 @@
   };
 
   /* Interface de conveniência: dicotomiza pela mediana e retorna objeto pronto p/ plot.
-     expr: array de valores. Filtra amostras sem dado válido. */
+     Espelha o plot_km() do Script.R: primeiro filtra as amostras com sobrevida válida
+     (tempo > 0, evento e expressão presentes) e então dicotomiza pela mediana das
+     amostras que efetivamente entram na análise. */
   SV.analyze = function (time, event, expr, medianCut) {
-    medianCut = (medianCut === undefined) ? st.median(expr) : medianCut;
-    const t2 = [], e2 = [], g2 = [];
+    const t2 = [], e2 = [], x2 = [];
     for (let i = 0; i < time.length; i++) {
       if (!isFinite(time[i]) || time[i] === null) continue;
+      if (time[i] <= 0) continue;
       if (!isFinite(expr[i]) || expr[i] === null) continue;
       t2.push(time[i]);
       e2.push(event[i] ? 1 : 0);
-      g2.push(expr[i] >= medianCut ? 'Alto' : 'Baixo');
+      x2.push(expr[i]);
     }
+    if (medianCut === undefined) medianCut = st.median(x2);
+    const g2 = x2.map((x) => (x >= medianCut ? 'Alto' : 'Baixo'));
     const km = SV.kmByGroup(t2, e2, g2);
     const lr = SV.logRank(t2, e2, g2);
     return {

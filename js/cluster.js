@@ -1,4 +1,4 @@
-/* TARGET ALL Explorer — Agrupamento hierárquico aglomerativo (complete linkage)
+/* Genesis — Agrupamento hierárquico aglomerativo (complete linkage)
    usado para ordenar linhas/colunas do heatmap (análogo ao pheatmap do R).
    Retorna a ordem das folhas (itens originais). */
 (function () {
