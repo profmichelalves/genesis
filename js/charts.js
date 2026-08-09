@@ -36,10 +36,11 @@
     syncResizeHandler();
   });
 
-  /* Plotly.getGraphDiv faz getElementById(id) — id com '#' nunca casa.
-     Converte seletor '#x' → elemento DOM. */
+  /* Aceita '#id' (querySelector) ou 'id' cru (getElementById) — o KM passa
+     divId sem '#' ('km-TP53'), como antes o Plotly.react resolvia. */
   function resolve(sel) {
-    return typeof sel === 'string' && sel.charAt(0) === '#' ? document.querySelector(sel) : sel;
+    if (typeof sel !== 'string') return sel;
+    return sel.charAt(0) === '#' ? document.querySelector(sel) : document.getElementById(sel);
   }
 
   /* desenha/atualiza um gráfico garantindo largura 100% (evita scroll horizontal
