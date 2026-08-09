@@ -198,6 +198,14 @@ table.data .mono { font-family: var(--mono); font-size: .78rem; }
 .plot.tall { min-height: 620px; }
 .plot .js-plotly-plot, .plot .plot-container, .plot .svg-container { max-width: 100%; }
 
+/* barra de ferramentas do Plotly (modo zoom/pan) alinhada à direita,
+   ao lado do ícone "i" de explicação no cabeçalho do card */
+.js-plotly-plot .plotly .modebar {
+  position: absolute;
+  top: -26px;
+  right: 41px;
+}
+
 /* ---------- Progress ---------- */
 #progress-bar {
   position: fixed; top: 0; left: 0; height: 3px; width: 0;

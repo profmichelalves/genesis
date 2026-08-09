@@ -473,23 +473,27 @@
       navigator.serviceWorker.register('sw.js').catch((e) => console.warn('SW falhou:', e));
     }
 
-    // botão instalar (PWA) — oculto quando o app já roda em modo standalone
+    // botão instalar (PWA) — só em dispositivo móvel e quando ainda não instalado:
+    // não aparece em navegador de desktop nem quando o app roda em modo standalone
+    const isMobileDevice = () =>
+      /android|iphone|ipad|ipod|mobile|tablet/i.test(navigator.userAgent) ||
+      (navigator.maxTouchPoints > 1 &&
+        Math.min(window.screen.width || 9999, window.screen.height || 9999) < 1024);
     let deferredPrompt = null;
+    const installBtn = $('#install-btn');
     if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-      $('#install-btn').hidden = true;
+      installBtn.hidden = true;
     }
+    installBtn.addEventListener('click', () => { if (deferredPrompt) deferredPrompt.prompt(); });
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      $('#install-btn').hidden = false;
-      $('#install-btn').addEventListener('click', () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-      });
+      if (!isMobileDevice()) return;
+      installBtn.hidden = false;
     });
     window.addEventListener('appinstalled', () => {
       deferredPrompt = null;
-      $('#install-btn').hidden = true;
+      installBtn.hidden = true;
     });
 
     datapackControls('#dash-datapack');

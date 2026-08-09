@@ -69,8 +69,11 @@
       paper_bgcolor: 'rgba(0,0,0,0)',
       plot_bgcolor: 'rgba(0,0,0,0)',
       font: { color: t.text, family: '-apple-system, Segoe UI, Roboto, sans-serif' },
-      margin: { l: 70, r: 20, t: 40, b: 50 },
-      autosize: true
+      margin: { l: 70, r: 20, t: 64, b: 50 },
+      autosize: true,
+      title_x: 0.5, title_xanchor: 'center',
+      /* legenda em linha (horizontal), abaixo do título do gráfico */
+      legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 0.99, yanchor: 'top' }
     };
   };
 
@@ -82,13 +85,15 @@
       x: items.map((g) => g.N),
       y: items.map((g) => g.Gene),
       marker: { color: '#4c78a8' },
+      showlegend: false,
       hovertemplate: '%{y}: %{x} amostras<extra></extra>'
     }];
     const layout = Object.assign(LAYOUT_BASE(), {
       title: 'Top 30 genes mutados',
       xaxis: { title: 'Nº de amostras mutadas', gridcolor: theme().grid },
       yaxis: { automargin: true, tickfont: { size: 11 } },
-      bargap: 0.35
+      bargap: 0.35,
+      showlegend: false
     });
     render(div, data, layout);
   };
@@ -98,15 +103,15 @@
     const up = table.filter((r) => r.color_grp === 'Upregulado');
     const down = table.filter((r) => r.color_grp === 'Downregulado');
     const ns = table.filter((r) => r.color_grp === 'NS');
-    const mk = (rows, color) => ({
+    const mk = (rows, color, name) => ({
       x: rows.map((r) => r.logFC), y: rows.map((r) => -Math.log10(Math.max(r['adj.P.Val'], 1e-300))),
       text: rows.map((r) => r.gene), mode: 'markers',
-      type: 'scatter', name: '',
+      type: 'scatter', name,
       marker: { size: 4, color, opacity: 0.7 },
       hovertemplate: '%{text}<br>log2FC=%{x:.2f}<br>-log10(adj.p)=%{y:.2f}<extra></extra>'
     });
     const data = [
-      mk(up, '#d64545'), mk(down, '#2d6cdf'), mk(ns, '#9aa3af')
+      mk(up, '#d64545', 'Upregulado'), mk(down, '#2d6cdf', 'Downregulado'), mk(ns, '#9aa3af', 'NS')
     ];
     const layout = Object.assign(LAYOUT_BASE(), {
       title: 'Volcano — Relapse vs None (adj. p)',
@@ -119,16 +124,16 @@
 
   /* Bloco 3 — MA plot */
   C.ma = function (div, table) {
-    const mk = (rows, color) => ({
+    const mk = (rows, color, name) => ({
       x: rows.map((r) => r.meanExpr), y: rows.map((r) => r.logFC),
-      text: rows.map((r) => r.gene), mode: 'markers', type: 'scatter',
+      text: rows.map((r) => r.gene), mode: 'markers', type: 'scatter', name,
       marker: { size: 4, color, opacity: 0.7 },
       hovertemplate: '%{text}<br>A=%{x:.2f}<br>M=%{y:.2f}<extra></extra>'
     });
     const up = table.filter((r) => r.color_grp === 'Upregulado');
     const down = table.filter((r) => r.color_grp === 'Downregulado');
     const ns = table.filter((r) => r.color_grp === 'NS');
-    const data = [mk(up, '#d64545'), mk(down, '#2d6cdf'), mk(ns, '#9aa3af')];
+    const data = [mk(up, '#d64545', 'Upregulado'), mk(down, '#2d6cdf', 'Downregulado'), mk(ns, '#9aa3af', 'NS')];
     const layout = Object.assign(LAYOUT_BASE(), {
       title: 'MA plot (média vs razão)',
       xaxis: { title: 'Média de expressão (A)', gridcolor: theme().grid },
@@ -145,7 +150,8 @@
       title: 'Heatmap — top genes por variância (z-score)',
       xaxis: { showticklabels: false, title: 'Amostras' },
       yaxis: { automargin: true },
-      height: Math.max(360, 200 + data.genes.length * 14)
+      height: Math.max(360, 200 + data.genes.length * 14),
+      showlegend: false
     });
     const trace = {
       type: 'heatmap',
@@ -233,6 +239,7 @@
         arrayminus: items.map((r) => r.HR - r.HR_lower)
       },
       marker: { color: items.map((r) => r.p_value < 0.05 ? '#d64545' : '#9aa3af'), size: 8 },
+      showlegend: false,
       hovertemplate: '%{y}<br>HR=%{x:.2f}<extra></extra>'
     }];
     const layout = Object.assign(LAYOUT_BASE(), {

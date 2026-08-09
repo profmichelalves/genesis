@@ -50,11 +50,17 @@
   H['clinical'] = {
     title: 'Tabela de dados clínicos',
     html:
-      '<p>Lista dos pacientes do estudo com seus atributos clínicos (idade, sexo, ' +
-      'estratificação de risco, desfechos, tempo de sobrevida, etc.).</p>' +
+      '<p>Lista dos pacientes do estudo com os atributos clínicos disponíveis no cBioPortal ' +
+      'para o TARGET ALL. Colunas presentes: <code>OS_MONTHS</code> (tempo de sobrevida em ' +
+      'meses), <code>OS_STATUS</code> (desfecho), <code>DAYS_TO_EVENT</code> (dias até o ' +
+      'evento), <code>FIRST_EVENT</code> (primeiro evento — Relapse, None, …), ' +
+      '<code>AGE_IN_DAYS</code> (idade em dias), <code>GENDER</code>, ' +
+      '<code>MOLECULAR_SUBTYPE</code>, <code>ANALYSIS_COHORT</code>, ' +
+      '<code>MRD_PERCENT_DAY_29</code> (doença residual mínima), <code>WBC</code> (leucócitos), ' +
+      '<code>RNA_SEQ_SAMPLE</code>, <code>WES_SEQ_SAMPLE</code> e <code>AFFY_RMA_CALL</code>.</p>' +
       h4('Como usar') +
       ul('O campo <b>Filtrar (texto)</b> busca em todas as colunas ao mesmo tempo ' +
-         '(ex.: <code>Relapse</code>, <code>Masculino</code> ou um ID de paciente).',
+         '(ex.: <code>Relapse</code>, <code>MALE</code> ou um ID de paciente).',
          'O botão <b>Exportar CSV</b> baixa a tabela (filtrada) completa, sem o limite de exibição.',
          'A tabela mostra até <b>500 linhas</b> por vez; o contador abaixo informa o total encontrado.') +
       h4('Nota') +
