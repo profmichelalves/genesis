@@ -74,8 +74,7 @@
       { k: 'Pacientes', v: p.nPatients },
       { k: 'Amostras RNA', v: p.rnaSampleIds.length },
       { k: 'Amostras WES', v: p.seqSampleIds.length },
-      { k: 'Genes', v: nExpr },
-      { k: 'Modo', v: p.scope === 'completo' ? 'Completo' : 'Expresso' }
+      { k: 'Genes', v: nExpr }
     ];
     $('#dash-stats').innerHTML = stats.map((s) =>
       '<div class="stat"><span class="label">' + s.k + '</span><span class="value">' + s.v + '</span></div>').join('');
@@ -391,7 +390,7 @@
 
       $('#cox-sub').textContent = S.coxUni.length + ' genes · hazard ratio por 1 DP de expressão (padronizada) · ' +
         'p<0.05 marcados com *';
-      TALL.charts.forest('#cox-forest', S.coxUni);
+      TALL.charts.forest('#cox-forest', S.coxUni, survTypeLabel());
       TALL.ui.renderTable($('#cox-table'),
         ['Gene', 'HR', 'IC95% inf', 'IC95% sup', 'p', 'signif'],
         S.coxUni.map((r) => [r.Gene, r.HR, r.HR_lower, r.HR_upper, r.p_value, r.p_signif]));
@@ -472,29 +471,6 @@
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch((e) => console.warn('SW falhou:', e));
     }
-
-    // botão instalar (PWA) — só em dispositivo móvel e quando ainda não instalado:
-    // não aparece em navegador de desktop nem quando o app roda em modo standalone
-    const isMobileDevice = () =>
-      /android|iphone|ipad|ipod|mobile|tablet/i.test(navigator.userAgent) ||
-      (navigator.maxTouchPoints > 1 &&
-        Math.min(window.screen.width || 9999, window.screen.height || 9999) < 1024);
-    let deferredPrompt = null;
-    const installBtn = $('#install-btn');
-    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-      installBtn.hidden = true;
-    }
-    installBtn.addEventListener('click', () => { if (deferredPrompt) deferredPrompt.prompt(); });
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      if (!isMobileDevice()) return;
-      installBtn.hidden = false;
-    });
-    window.addEventListener('appinstalled', () => {
-      deferredPrompt = null;
-      installBtn.hidden = true;
-    });
 
     datapackControls('#dash-datapack');
 

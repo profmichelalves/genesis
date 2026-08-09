@@ -41,6 +41,8 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
 }
+/* impede a rolagem da página enquanto o loading está visível */
+html.loading-lock, body.loading-lock { overflow: hidden; }
 
 a { color: var(--accent); }
 
@@ -199,11 +201,12 @@ table.data .mono { font-family: var(--mono); font-size: .78rem; }
 .plot .js-plotly-plot, .plot .plot-container, .plot .svg-container { max-width: 100%; }
 
 /* barra de ferramentas do Plotly (modo zoom/pan) alinhada à direita,
-   ao lado do ícone "i" de explicação no cabeçalho do card */
+   ao lado do ícone "i" de explicação no cabeçalho do card.
+   !important: o CSS do Plotly é injetado depois do nosso */
 .js-plotly-plot .plotly .modebar {
-  position: absolute;
-  top: -26px;
-  right: 41px;
+  position: absolute !important;
+  top: -26px !important;
+  right: 41px !important;
 }
 
 /* ---------- Progress ---------- */

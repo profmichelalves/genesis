@@ -2,7 +2,7 @@
    Estratégia: cache-first para o app shell (mesmo domínio) e
    stale-while-revalidate para o Plotly CDN. Os dados de estudo ficam
    em IndexedDB (gerenciado pela aplicação), não aqui. */
-const CACHE = 'genesis-v1';
+const CACHE = 'genesis-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -40,7 +40,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-const RUNTIME_CACHE = 'genesis-runtime-v1';
+const RUNTIME_CACHE = 'genesis-runtime-v2';
 const CDN_PREFIXES = [
   'https://cdn.plot.ly/'
 ];

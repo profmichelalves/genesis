@@ -69,13 +69,17 @@
       paper_bgcolor: 'rgba(0,0,0,0)',
       plot_bgcolor: 'rgba(0,0,0,0)',
       font: { color: t.text, family: '-apple-system, Segoe UI, Roboto, sans-serif' },
-      margin: { l: 70, r: 20, t: 64, b: 50 },
+      margin: { l: 70, r: 20, t: 96, b: 50 },
       autosize: true,
-      title_x: 0.5, title_xanchor: 'center',
-      /* legenda em linha (horizontal), abaixo do título do gráfico */
-      legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 0.99, yanchor: 'top' }
+      title_x: 0.5, title_xanchor: 'center', title_y: 0.98, title_yanchor: 'top',
+      /* legenda em linha (horizontal), abaixo do título e FORA da área do gráfico.
+         Para o Plotly, y=1 é o topo da área plotada; y>1 sobe para a margem de cima */
+      legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 1.05, yanchor: 'bottom', bgcolor: 'rgba(0,0,0,0)', borderwidth: 0 }
     };
   };
+  /* margem superior generosa para os gráficos que exibem legenda, garantindo
+     que a legenda fique no cabeçalho (entre título e área plotada) */
+  const LEGEND_MARGIN = { l: 70, r: 20, t: 140, b: 50 };
 
   /* Bloco 1 — Top 30 genes mutados (rows: {Gene, N}) */
   C.top30 = function (div, rows) {
@@ -115,6 +119,7 @@
     ];
     const layout = Object.assign(LAYOUT_BASE(), {
       title: 'Volcano — Relapse vs None (adj. p)',
+      margin: LEGEND_MARGIN,
       xaxis: { title: 'log2FC', gridcolor: theme().grid },
       yaxis: { title: '-log10(adj. p)', gridcolor: theme().grid },
       shapes: [{ type: 'line', x0: 0, x1: 0, y0: 0, y1: 1, xref: 'x', yref: 'paper', line: { color: theme().grid, dash: 'dot' } }]
@@ -136,6 +141,7 @@
     const data = [mk(up, '#d64545', 'Upregulado'), mk(down, '#2d6cdf', 'Downregulado'), mk(ns, '#9aa3af', 'NS')];
     const layout = Object.assign(LAYOUT_BASE(), {
       title: 'MA plot (média vs razão)',
+      margin: LEGEND_MARGIN,
       xaxis: { title: 'Média de expressão (A)', gridcolor: theme().grid },
       yaxis: { title: 'log2FC (M)', gridcolor: theme().grid }
     });
@@ -210,6 +216,7 @@
     });
     const layout = Object.assign(LAYOUT_BASE(), {
       title: (meta && meta.title) || 'Sobrevivência global — Kaplan-Meier',
+      margin: LEGEND_MARGIN,
       xaxis: { title: 'Meses', gridcolor: t.grid },
       yaxis: { title: 'Probabilidade de sobrevida', gridcolor: t.grid, range: [0, 1] },
       annotations: [],
@@ -226,32 +233,68 @@
     render(div, traces, layout);
   };
 
-  /* Bloco 6 — Forest plot (Cox univariado: {Gene, HR, HR_lower, HR_upper, p_value}) */
-  C.forest = function (div, rows) {
-    const items = rows.slice().reverse();
+  /* Bloco 6 — Forest plot (Cox univariado: {Gene, HR, HR_lower, HR_upper, p_value, p_signif}).
+     Réplica do ggplot do Script.R: eixo X linear em HR, linha de nulidade em HR=1,
+     IC95% horizontal com caps, cor por HR>1 (vermelho) / HR≤1 (azul), tamanho ∝ −log10(p)
+     e texto "HR=…  p=…" à direita de cada linha. */
+  C.forest = function (div, rows, endpoint) {
+    const items = rows.slice()
+      .filter((r) => isFinite(r.HR) && isFinite(r.HR_lower) && isFinite(r.HR_upper))
+      .sort((a, b) => a.HR - b.HR);
+    const el = resolve(div);
+    if (!items.length) {
+      if (el) el.innerHTML = '<p class="muted">Sem resultados de Cox univariado para exibir.</p>';
+      return;
+    }
     const t = theme();
-    const data = [{
-      type: 'scatter', mode: 'markers',
-      x: items.map((r) => r.HR), y: items.map((r) => r.Gene),
-      error_x: {
-        type: 'data', symmetric: false,
-        array: items.map((r) => r.HR_upper - r.HR),
-        arrayminus: items.map((r) => r.HR - r.HR_lower)
-      },
-      marker: { color: items.map((r) => r.p_value < 0.05 ? '#d64545' : '#9aa3af'), size: 8 },
-      showlegend: false,
-      hovertemplate: '%{y}<br>HR=%{x:.2f}<extra></extra>'
-    }];
+    const maxUpper = Math.max.apply(null, items.map((r) => r.HR_upper));
+    const minLower = Math.min.apply(null, items.map((r) => r.HR_lower));
+    // tamanho do ponto ∝ −log10(p) — equivalente ao scale_size(range = c(2, 6)) do R
+    const sizeOf = (p) => {
+      const nlp = Math.max(0.01, -Math.log10(Math.max(p, 1e-12)));
+      return 6 + (nlp - 0.9) * 8 / 1.8;
+    };
+    const mk = (pred, color, name) => {
+      const sub = items.filter(pred);
+      return {
+        type: 'scatter', mode: 'markers',
+        x: sub.map((r) => r.HR), y: sub.map((r) => r.Gene),
+        customdata: sub.map((r) => [r.HR_lower, r.HR_upper, r.p_value]),
+        error_x: {
+          type: 'data', symmetric: false,
+          array: sub.map((r) => r.HR_upper - r.HR),
+          arrayminus: sub.map((r) => r.HR - r.HR_lower),
+          width: 5, color: 'gray', thickness: 1.2
+        },
+        marker: {
+          color, size: sub.map((r) => sizeOf(r.p_value)),
+          line: { width: 1, color: 'rgba(255,255,255,.7)' }
+        },
+        name: name,
+        hovertemplate: '%{y}<br>HR=%{x:.2f} (IC95% %{customdata[0]:.2f}–%{customdata[1]:.2f})<br>p=%{customdata[2]:.4f}<extra></extra>'
+      };
+    };
+    const data = [
+      mk((r) => r.HR <= 1, '#2980b9', 'HR < 1 (Protetor)'),
+      mk((r) => r.HR > 1, '#c0392b', 'HR > 1 (Risco↑)')
+    ];
     const layout = Object.assign(LAYOUT_BASE(), {
-      title: 'Cox univariado — HR por gene (OS)',
-      xaxis: { title: 'Hazard ratio (log)', type: 'log', gridcolor: t.grid,
-        range: [Math.log(Math.min.apply(null, items.map((r) => r.HR_lower))) / Math.LN10 - 0.3,
-                Math.log(Math.max.apply(null, items.map((r) => r.HR_upper))) / Math.LN10 + 0.3] },
-      yaxis: { automargin: true },
-      shapes: [{ type: 'line', x0: 1, x1: 1, y0: 0, y1: 1, xref: 'x', yref: 'paper', line: { color: '#c23b3b', dash: 'dot' } }],
-      height: Math.max(320, items.length * 22)
+      title: 'Forest Plot — Cox Univariado<br>Endpoint: ' + (endpoint || 'OS (Sobrevida Global)'),
+      margin: { l: 70, r: 40, t: 120, b: 50 },
+      xaxis: {
+        title: 'Hazard Ratio (IC 95%)', gridcolor: t.grid, zeroline: false,
+        range: [Math.max(0, minLower * 0.8), maxUpper * 1.85]
+      },
+      yaxis: { automargin: true, categoryorder: 'array', categoryarray: items.map((r) => r.Gene) },
+      shapes: [{ type: 'line', x0: 1, x1: 1, y0: 0, y1: 1, xref: 'x', yref: 'paper', line: { color: 'gray', dash: 'dot' } }],
+      annotations: items.map((r) => ({
+        xref: 'x', yref: 'y', x: maxUpper * 1.08, y: r.Gene,
+        xanchor: 'left', showarrow: false,
+        text: 'HR=' + r.HR + '  p=' + r.p_value + (r.p_signif || ''),
+        font: { size: 11, color: 'gray' }
+      }))
     });
-    render(div, [data], layout);
+    render(div, data, layout);
   };
 
   C.theme = theme;

@@ -277,9 +277,10 @@
          '<b>Linha tracejada em HR = 1</b> — ponto de efeito nulo; genes cujo IC cruza a ' +
          'linha não têm evidência de associação.') +
       h4('Cores') +
-      ul(b('<span style="color:#d64545">Vermelho</span>') + ' — p &lt; 0.05 (associação nominalmente ' +
-         'significativa).',
-         b('<span style="color:#9aa3af">Cinza</span>') + ' — p ≥ 0.05.') +
+      ul(b('<span style="color:#c0392b">Vermelho</span>') + ' — HR &gt; 1: maior expressão associa-se a ' +
+         'maior risco (pior prognóstico).',
+         b('<span style="color:#2980b9">Azul</span>') + ' — HR ≤ 1: maior expressão associa-se a menor ' +
+         'risco (proteção).') +
       h4('Cautelas') +
       ul('Modelo <b>univariado</b> — não ajusta para covariáveis; associações podem refletir ' +
          'confundimento.',

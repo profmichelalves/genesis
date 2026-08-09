@@ -128,6 +128,23 @@
 
   /* ---------- loading (overlay com o layout do ícone) ---------- */
   let loadingEl = null;
+  const preventScroll = (e) => e.preventDefault();
+  function lockScroll() {
+    document.documentElement.classList.add('loading-lock');
+    document.body.classList.add('loading-lock');
+    if (loadingEl) {
+      loadingEl.addEventListener('wheel', preventScroll, { passive: false });
+      loadingEl.addEventListener('touchmove', preventScroll, { passive: false });
+    }
+  }
+  function unlockScroll() {
+    document.documentElement.classList.remove('loading-lock');
+    document.body.classList.remove('loading-lock');
+    if (loadingEl) {
+      loadingEl.removeEventListener('wheel', preventScroll);
+      loadingEl.removeEventListener('touchmove', preventScroll);
+    }
+  }
   U.loading = function (msg) {
     if (!loadingEl) {
       loadingEl = document.createElement('div');
@@ -144,9 +161,11 @@
     const m = loadingEl.querySelector('#loading-msg');
     if (msg) m.textContent = msg;
     loadingEl.classList.add('open');
+    lockScroll();
   };
   U.endLoading = function () {
     if (loadingEl) loadingEl.classList.remove('open');
+    unlockScroll();
   };
 
   window.TALL = window.TALL || {}; window.TALL.ui = U;
