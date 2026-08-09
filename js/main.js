@@ -78,7 +78,7 @@
       { k: 'Modo', v: p.scope === 'completo' ? 'Completo' : 'Expresso' }
     ];
     $('#dash-stats').innerHTML = stats.map((s) =>
-      '<div class="stat"><span class="value">' + s.v + '</span><span class="label">' + s.k + '</span></div>').join('');
+      '<div class="stat"><span class="label">' + s.k + '</span><span class="value">' + s.v + '</span></div>').join('');
 
     // distribuição FIRST_EVENT
     const counts = {};
