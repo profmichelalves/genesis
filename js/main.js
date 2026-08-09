@@ -411,10 +411,28 @@
   ============================================================ */
   function runAll() {
     if (!S.dp) return;
-    try { runTop30(); } catch (e) { console.error('Top30:', e); }
-    try { runDea(); } catch (e) { console.error('DEA:', e); }
-    try { runKm(); } catch (e) { console.error('KM:', e); }
-    try { runCox(); } catch (e) { console.error('Cox:', e); }
+    const steps = [['Top30', runTop30], ['DEA', runDea], ['KM', runKm], ['Cox', runCox]];
+    for (const [label, fn] of steps) {
+      try { fn(); } catch (e) {
+        console.error(label + ':', e);
+        TALL.ui.toast(label + ': falhou — ' + (e && e.message ? e.message : e), 'error');
+      }
+    }
+  }
+
+  /* re-renderiza uma análise se os gráficos do painel ainda não foram criados
+     (ex.: painel estava display:none quando runAll() rodou) */
+  function rerenderIfEmpty(panel, fn) {
+    if (!S.dp) return;
+    const plots = panel.querySelectorAll('.plot');
+    if (!plots.length) return;
+    if (!panel.querySelector('.js-plotly-plot')) { try { fn(); } catch (e) { console.error('re-render:', e); } }
+  }
+  function wireOnShow() {
+    TALL.ui.onShow.top30 = (panel) => rerenderIfEmpty(panel, runTop30);
+    TALL.ui.onShow.dea = (panel) => rerenderIfEmpty(panel, runDea);
+    TALL.ui.onShow.km = (panel) => rerenderIfEmpty(panel, runKm);
+    TALL.ui.onShow.cox = (panel) => rerenderIfEmpty(panel, runCox);
   }
 
   /* ============================================================
@@ -448,6 +466,7 @@
 
     $('#clin-filter').addEventListener('input', (e) => updateClinicalTable(e.target.value));
     wireExports();
+    wireOnShow();
 
     // carrega cache
     S.dp = await TALL.datapack.loadFromCache();

@@ -32,7 +32,22 @@
     const tab = document.querySelector('.tab[data-panel="' + name + '"]');
     if (tab) tab.setAttribute('aria-selected', 'true');
     window.scrollTo({ top: 0 });
+    // gráficos Plotly criados enquanto o painel estava oculto (display:none)
+    // nascem com 0×0 — redimensiona ao exibir a aba e dá chance de
+    // re-renderizar análises cujos plots ainda não foram criados.
+    if (panel && window.Plotly) {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        panel.querySelectorAll('.plot').forEach((el) => {
+          try { if (el.classList.contains('js-plotly-plot')) Plotly.Plots.resize(el); } catch (e) {}
+        });
+        const fn = U.onShow[name];
+        if (fn) { try { fn(panel); } catch (e) {} }
+      }));
+    }
   };
+
+  /* callbacks por painel (ex.: re-renderizar análise se o plot ainda não existe) */
+  U.onShow = {};
 
   /* ---------- tema ---------- */
   U.toggleTheme = function () {

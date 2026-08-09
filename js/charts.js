@@ -17,6 +17,12 @@
     };
   }
   const CFG = { displaylogo: false, responsive: true };
+
+  /* Plotly.getGraphDiv faz getElementById(id) — id com '#' nunca casa.
+     Converte seletor '#x' → elemento DOM. */
+  function resolve(sel) {
+    return typeof sel === 'string' && sel.charAt(0) === '#' ? document.querySelector(sel) : sel;
+  }
   const LAYOUT_BASE = () => {
     const t = theme();
     return {
@@ -44,7 +50,7 @@
       yaxis: { automargin: true, tickfont: { size: 11 } },
       bargap: 0.35
     });
-    Plotly.react(div, data, layout, CFG);
+    Plotly.react(resolve(div), data, layout, CFG);
   };
 
   /* Bloco 2 — Volcano plot (DEA) */
@@ -68,7 +74,7 @@
       yaxis: { title: '-log10(adj. p)', gridcolor: theme().grid },
       shapes: [{ type: 'line', x0: 0, x1: 0, y0: 0, y1: 1, xref: 'x', yref: 'paper', line: { color: theme().grid, dash: 'dot' } }]
     });
-    Plotly.react(div, data, layout, CFG);
+    Plotly.react(resolve(div), data, layout, CFG);
   };
 
   /* Bloco 3 — MA plot */
@@ -88,7 +94,7 @@
       xaxis: { title: 'Média de expressão (A)', gridcolor: theme().grid },
       yaxis: { title: 'log2FC (M)', gridcolor: theme().grid }
     });
-    Plotly.react(div, data, layout, CFG);
+    Plotly.react(resolve(div), data, layout, CFG);
   };
 
   /* Bloco 4 — Heatmap (z-score, ordenado por cluster e por grupo clínico) */
@@ -110,7 +116,7 @@
       zmid: 0, showscale: true,
       colorbar: { title: 'z-score', titleside: 'right' }
     };
-    Plotly.react(div, [trace], layout, CFG);
+    Plotly.react(resolve(div), [trace], layout, CFG);
   };
 
   /* Bloco 5 — Kaplan-Meier com tabela de risco.
@@ -155,7 +161,7 @@
         bgcolor: 'rgba(255,255,255,0.55)'
       });
     }
-    Plotly.react(div, traces, layout, CFG);
+    Plotly.react(resolve(div), traces, layout, CFG);
   };
 
   /* Bloco 6 — Forest plot (Cox univariado: {Gene, HR, HR_lower, HR_upper, p_value}) */
@@ -182,7 +188,7 @@
       shapes: [{ type: 'line', x0: 1, x1: 1, y0: 0, y1: 1, xref: 'x', yref: 'paper', line: { color: '#c23b3b', dash: 'dot' } }],
       height: Math.max(320, items.length * 22)
     });
-    Plotly.react(div, [data], layout, CFG);
+    Plotly.react(resolve(div), [data], layout, CFG);
   };
 
   C.theme = theme;
