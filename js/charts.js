@@ -237,10 +237,17 @@
      Réplica do ggplot do Script.R: eixo X linear em HR, linha de nulidade em HR=1,
      IC95% horizontal com caps, cor por HR>1 (vermelho) / HR≤1 (azul), tamanho ∝ −log10(p)
      e texto "HR=…  p=…" à direita de cada linha. */
+  /* limite de linhas exibidas no forest: se houver mais, ficam as mais significativas por p */
+  C.FOREST_MAX = 120;
+
   C.forest = function (div, rows, endpoint) {
-    const items = rows.slice()
+    let items = rows.slice()
       .filter((r) => isFinite(r.HR) && isFinite(r.HR_lower) && isFinite(r.HR_upper))
       .sort((a, b) => a.HR - b.HR);
+    if (items.length > C.FOREST_MAX) {
+      items = items.slice().sort((a, b) => a.p_value - b.p_value).slice(0, C.FOREST_MAX)
+        .sort((a, b) => a.HR - b.HR);
+    }
     const el = resolve(div);
     if (!items.length) {
       if (el) el.innerHTML = '<p class="muted">Sem resultados de Cox univariado para exibir.</p>';
@@ -278,21 +285,22 @@
       mk((r) => r.HR <= 1, '#2980b9', 'HR < 1 (Protetor)'),
       mk((r) => r.HR > 1, '#c0392b', 'HR > 1 (Risco↑)')
     ];
+    const withLabels = items.length <= 40;
     const layout = Object.assign(LAYOUT_BASE(), {
       title: 'Forest Plot — Cox Univariado<br>Endpoint: ' + (endpoint || 'OS (Sobrevida Global)'),
       margin: { l: 70, r: 40, t: 120, b: 50 },
       xaxis: {
         title: 'Hazard Ratio (IC 95%)', gridcolor: t.grid, zeroline: false,
-        range: [Math.max(0, minLower * 0.8), maxUpper * 1.85]
+        range: [Math.max(0, minLower * 0.8), maxUpper * (withLabels ? 1.85 : 1.1)]
       },
       yaxis: { automargin: true, categoryorder: 'array', categoryarray: items.map((r) => r.Gene) },
       shapes: [{ type: 'line', x0: 1, x1: 1, y0: 0, y1: 1, xref: 'x', yref: 'paper', line: { color: 'gray', dash: 'dot' } }],
-      annotations: items.map((r) => ({
+      annotations: withLabels ? items.map((r) => ({
         xref: 'x', yref: 'y', x: maxUpper * 1.08, y: r.Gene,
         xanchor: 'left', showarrow: false,
         text: 'HR=' + r.HR + '  p=' + r.p_value + (r.p_signif || ''),
         font: { size: 11, color: 'gray' }
-      }))
+      })) : []
     });
     render(div, data, layout);
   };

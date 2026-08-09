@@ -376,10 +376,20 @@
   /* ============================================================
      Bloco 6 — Cox
   ============================================================ */
+  /* genes padrão do Cox — adapta ao escopo baixado: no Expresso roda todos os genes do
+     painel; no Completo usa os candidatos top do Script.R (top DEGs ∪ top30 mutados) */
+  function coxDefaultGenes() {
+    if (S.dp && S.dp.pack && S.dp.pack.scope === 'completo') return defaultGenes();
+    return S.dp ? S.dp.expr.map((g) => g.symbol) : [];
+  }
+
   function runCox() {
     if (!S.dp) return TALL.ui.toast('Baixe os dados primeiro.', 'error');
     const input = $('#cox-genes').value.trim();
-    const genes = input ? input.split(/[,\s;]+/).map((g) => g.toUpperCase()).filter(Boolean) : defaultGenes();
+    const genes = input ? input.split(/[,\s;]+/).map((g) => g.toUpperCase()).filter(Boolean) : coxDefaultGenes();
+    const fonte = input ? 'seleção manual'
+      : (S.dp.pack.scope === 'completo' ? 'candidatos top (DEGs/top30), como no Script.R'
+        : 'todos os ' + genes.length + ' genes baixados (Expresso)');
     withLoading('Rodando Cox…', () => {
       const { time, event } = survivalArrays();
       const exprMap = {};
@@ -388,8 +398,10 @@
       S.coxUni = TALL.cox.univariate(time, event, genes, exprMap);
       if (!S.coxUni.length) return TALL.ui.toast('Nenhum gene com dados suficientes.', 'error');
 
-      $('#cox-sub').textContent = S.coxUni.length + ' genes · hazard ratio por 1 DP de expressão (padronizada) · ' +
-        'p<0.05 marcados com *';
+      const max = TALL.charts.FOREST_MAX;
+      $('#cox-sub').textContent = S.coxUni.length + ' genes com Cox válido · ' + fonte +
+        (S.coxUni.length > max ? ' · exibindo os ' + max + ' mais significativos' : '') +
+        ' · HR por 1 DP de expressão (padronizada) · p<0.05 marcados com *';
       TALL.charts.forest('#cox-forest', S.coxUni, survTypeLabel());
       TALL.ui.renderTable($('#cox-table'),
         ['Gene', 'HR', 'IC95% inf', 'IC95% sup', 'p', 'signif'],

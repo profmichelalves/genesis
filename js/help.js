@@ -251,8 +251,10 @@
       'doença). A expressão de cada gene é <b>padronizada</b> (z-score), portanto o hazard ' +
       'ratio descreve o efeito de um aumento de <b>1 desvio padrão</b>.</p>' +
       h4('Entrada') +
-      ul('Genes separados por vírgula, ou campo vazio para usar os candidatos padrão: ' +
-         'top 10 DEGs e top 30 mutados que possuem dados de expressão.') +
+      ul('Genes separados por vírgula. Com o campo vazio, a análise se adapta ao escopo baixado: ' +
+         'no <b>Expresso</b>, roda todos os genes do painel baixado; no <b>Completo</b>, os ' +
+         'candidatos top (top 10 DEGs e top 30 mutados com expressão), como no Script.R. ' +
+         'O forest exibe até 120 genes mais significativos.') +
       h4('Resultado') +
       ul('São gerados o <b>forest plot</b> e as tabelas <b>univariada</b> e ' +
          '<b>multivariada</b>.',
